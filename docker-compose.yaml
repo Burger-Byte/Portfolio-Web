@@ -1,3 +1,24 @@
+version: '3.8'
+
 services:
   portfolio-app:
-    image: jaquesburger/portfolio:latest
+    image: ${DOCKER_USERNAME}/portfolio:latest
+    container_name: portfolio_app
+    restart: unless-stopped
+    volumes:
+      - /secure/portfolio/resume:/app/static/secure:ro
+      - /var/log/portfolio:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=false
+      - RESUME_PATH=static/secure
+      - RESUME_FILENAME=Jaques_Burger_Resume.pdf
+      - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
+    networks:
+      - portfolio_network
+    ports:
+      - "5000:5000"
+
+networks:
+  portfolio_network:
+    driver: bridge
