@@ -1,0 +1,471 @@
+{% extends "portfolio_base.html" %}
+
+{% block title %}About - {{ data.personal_info.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-top: 100px;"></div>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-5">
+                <div class="text-center">
+                    <img src="{{ url_for('static', filename='JB.jpg') }}" alt="Jaques Burger" class="profile-image" style="width: 250px; height: 250px;">
+                    <h2 class="mt-3">{{ data.personal_info.name }}</h2>
+                    <p class="text-muted">{{ data.personal_info.title }}</p>
+                    <div class="social-links">
+                        <a href="{{ data.personal_info.github }}" target="_blank" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="{{ data.personal_info.linkedin }}" target="_blank" title="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="mailto:{{ data.personal_info.email }}" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <h2 class="section-title">About Me</h2>
+                <p class="lead">{{ data.about.summary }}</p>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('download_resume') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-download me-2"></i>Download Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-dark-custom">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">🗺️ My Tech Knowledge Map</h2>
+            <p class="lead">Revealing Hidden Patterns in 13+ Years of Technical Experience</p>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color core-support"></div>
+                <span>Core Support Skills</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color systems"></div>
+                <span>System Administration</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color devops"></div>
+                <span>DevOps & Automation</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cloud"></div>
+                <span>Cloud Platforms</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color infrastructure"></div>
+                <span>Infrastructure</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color dev-basics"></div>
+                <span>Development Skills</span>
+            </div>
+        </div>
+        
+        <div class="map-container" id="knowledgeMap">
+            <!-- Core Support Skills -->
+            <div class="knowledge-node core-support" style="top: 50px; left: 100px;" title="My foundation - troubleshooting and problem-solving across diverse technologies">API Support</div>
+            <div class="knowledge-node core-support" style="top: 120px; left: 50px;">SQL Debugging</div>
+            <div class="knowledge-node core-support" style="top: 180px; left: 120px;">Customer Issues</div>
+            
+            <!-- System Administration -->
+            <div class="knowledge-node systems" style="top: 80px; left: 300px;">Linux Admin</div>
+            <div class="knowledge-node systems" style="top: 150px; left: 280px;">Windows Server</div>
+            <div class="knowledge-node systems" style="top: 220px; left: 320px;">System Monitoring</div>
+            
+            <!-- Infrastructure -->
+            <div class="knowledge-node infrastructure" style="top: 40px; left: 500px;">F5 Load Balancers</div>
+            <div class="knowledge-node infrastructure" style="top: 100px; left: 520px;">Network Config</div>
+            <div class="knowledge-node infrastructure" style="top: 160px; left: 480px;">Performance Tuning</div>
+            
+            <!-- Cloud & DevOps -->
+            <div class="knowledge-node cloud" style="top: 280px; left: 200px;">Azure DevOps</div>
+            <div class="knowledge-node devops" style="top: 350px; left: 150px;">CI/CD Pipelines</div>
+            <div class="knowledge-node devops" style="top: 320px; left: 300px;">Automation Scripts</div>
+            <div class="knowledge-node cloud" style="top: 380px; left: 250px;">Cloud Migration</div>
+            
+            <!-- In-house Systems -->
+            <div class="knowledge-node devops" style="top: 250px; left: 450px;">In-house Products</div>
+            <div class="knowledge-node systems" style="top: 300px; left: 480px;">System Integration</div>
+            <div class="knowledge-node devops" style="top: 400px; left: 420px;">Internal Tools</div>
+            
+            <!-- Development Journey -->
+            <div class="knowledge-node dev-basics" style="top: 450px; left: 100px;">Dev Fundamentals</div>
+            <div class="knowledge-node dev-basics" style="top: 480px; left: 200px;">Code Review</div>
+            <div class="knowledge-node dev-basics" style="top: 420px; left: 350px;">Git Workflows</div>
+            
+            <!-- Bridge Skills -->
+            <div class="knowledge-node devops" style="top: 200px; left: 600px;">Deployment Strategies</div>
+            <div class="knowledge-node infrastructure" style="top: 350px; left: 580px;">Infrastructure as Code</div>
+        </div>
+        
+        <div class="insights">
+            <div class="insight-card">
+                <div class="insight-title">🔍 The Bridge Builder Pattern</div>
+                <div class="insight-content">
+                    My unique strength is being a <span class="pattern-highlight">technical translator</span>. I bridge the gap between support, operations, and development - understanding customer pain points while knowing the underlying systems that cause them.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">🏗️ The Full-Stack Operations Engineer</div>
+                <div class="insight-content">
+                    Through experience and tinkering I accidentally built <span class="pattern-highlight">end-to-end system knowledge</span> - from load balancers through Linux/Windows servers to Azure DevOps pipelines and REST APIs. This gave me more of a holistic view which is valuable.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">🚀 The Evolution Catalyst</div>
+                <div class="insight-content">
+                    My transition makes me feel like a <span class="pattern-highlight">technology evolution driver</span>. I didn't just maintain systems - I improved them, automated them, and helped modernize them.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">💡 Multi-Platform Fluency</div>
+                <div class="insight-content">
+                    Most people specialize in either Windows or Linux. I am becoming <span class="pattern-highlight">increasingly fluent</span> in both ecosystems, plus cloud-native - making me incredibly versatile for hybrid environments.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">⚡ The Continuous Learner</div>
+                <div class="insight-content">
+                    My journey from reactive support to proactive DevOps enables me to <span class="pattern-highlight">self-evolve</span>. I naturally gravitate toward learning what's needed next, not just what is asked of me.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">🎯 Strategic Development Path</div>
+                <div class="insight-content">
+                    Learning coding fundamentals are <span class="pattern-highlight">strategically chosen</span> to complement my ops expertise. Building toward being a true DevOps engineer who understands both sides.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="journey-timeline">
+            <div class="timeline-title">🗺️ My Knowledge Evolution Journey</div>
+            
+            <div class="timeline-step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Foundation Phase:</strong> Built deep troubleshooting skills across diverse technologies (API, SQL, Linux, Windows, F5, Automated Deployments, Azure Devops)
+                </div>
+            </div>
+            
+            <div class="timeline-step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Specialization Phase:</strong> Developed expertise in system administration and infrastructure management.
+                </div>
+            </div>
+            
+            <div class="timeline-step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Evolution Phase:</strong> Transitioned to DevOps, focusing on Azure DevOps and in-house systems to automate and optimize processes.
+                </div>
+            </div>
+            
+            <div class="timeline-step">
+                <div class="step-number">4</div>
+                <div>
+                    <strong>Growth Phase:</strong> Actively learning development fundamentals to become more well-rounded
+                </div>
+            </div>
+            
+            <div class="timeline-step">
+                <div class="step-number">5</div>
+                <div>
+                    <strong>Next Phase:</strong> Positioned to become a full Software Engineer with a DevOps mindset with rare end-to-end system understanding
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+}
+
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    margin: 20px 0;
+    border-radius: 15px;
+    background: var(--darker-bg);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+}
+
+.knowledge-node {
+    position: absolute;
+    padding: 12px 18px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 14px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.knowledge-node:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.core-support { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.systems { background: linear-gradient(135deg, #3498db, #2980b9); }
+.devops { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.cloud { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.dev-basics { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.infrastructure { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+.connection-line {
+    position: absolute;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(107, 114, 128, 0.6), rgba(156, 163, 175, 0.6));
+    border-radius: 2px;
+    transform-origin: left center;
+    opacity: 0.7;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+.insights {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.insight-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 15px;
+    border-left: 5px solid var(--primary-color);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-5px);
+}
+
+.insight-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.insight-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.pattern-highlight {
+    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: white;
+}
+
+.journey-timeline {
+    margin-top: 30px;
+    padding: 30px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.timeline-title {
+    text-align: center;
+    font-size: 1.3em;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.timeline-step {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--darker-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.step-number {
+    background: var(--primary-color);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.knowledge-node {
+    opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: 400px;
+    }
+    
+    .knowledge-node {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 60px;
+    }
+    
+    .insights {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-step {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .step-number {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
+</style>
+
+<script>
+function drawConnections() {
+    const connections = [
+        // Support to Systems
+        {from: {x: 200, y: 65}, to: {x: 300, y: 95}},
+        {from: {x: 150, y: 135}, to: {x: 280, y: 165}},
+        
+        // Systems to Infrastructure
+        {from: {x: 400, y: 95}, to: {x: 500, y: 55}},
+        {from: {x: 380, y: 165}, to: {x: 520, y: 115}},
+        
+        // Support to DevOps
+        {from: {x: 200, y: 195}, to: {x: 200, y: 295}},
+        {from: {x: 220, y: 195}, to: {x: 300, y: 335}},
+        
+        // Infrastructure to DevOps
+        {from: {x: 580, y: 115}, to: {x: 450, y: 265}},
+        {from: {x: 580, y: 175}, to: {x: 480, y: 315}},
+        
+        // DevOps to Development
+        {from: {x: 200, y: 395}, to: {x: 150, y: 465}},
+        {from: {x: 350, y: 395}, to: {x: 350, y: 435}},
+    ];
+    
+    const mapContainer = document.getElementById('knowledgeMap');
+    if (!mapContainer) return;
+    
+    connections.forEach((conn, index) => {
+        const line = document.createElement('div');
+        line.className = 'connection-line';
+        
+        const dx = conn.to.x - conn.from.x;
+        const dy = conn.to.y - conn.from.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        
+        line.style.width = length + 'px';
+        line.style.left = conn.from.x + 'px';
+        line.style.top = conn.from.y + 'px';
+        line.style.transform = `rotate(${angle}deg)`;
+        line.style.animationDelay = (index * 0.2) + 's';
+        
+        mapContainer.appendChild(line);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.knowledge-node').forEach(node => {
+        node.addEventListener('mouseenter', function() {
+            this.style.zIndex = '100';
+        });
+        
+        node.addEventListener('mouseleave', function() {
+            this.style.zIndex = '1';
+        });
+    });
+    
+    drawConnections();
+    
+    document.querySelectorAll('.knowledge-node').forEach((node, index) => {
+        node.style.animationDelay = (index * 0.1) + 's';
+        node.style.animation = 'fadeInUp 0.6s ease forwards';
+    });
+});
+</script>
+{% endblock %}

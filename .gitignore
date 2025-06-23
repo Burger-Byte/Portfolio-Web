@@ -1,0 +1,17 @@
+"""
+# Add to your .gitignore file
+static/*.pdf
+static/resume*
+downloads/
+.env
+config.py
+resume/
+
+# System files
+.DS_Store
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+"""

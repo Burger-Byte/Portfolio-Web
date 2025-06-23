@@ -1,0 +1,73 @@
+{% extends "portfolio_base.html" %}
+
+{% block title %}{{ project.title }} - {{ data.personal_info.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-top: 100px;"></div>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('home') }}" style="color: var(--primary-color);">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('projects') }}" style="color: var(--primary-color);">Projects</a></li>
+                        <li class="breadcrumb-item active" style="color: var(--text-secondary);">{{ project.title }}</li>
+                    </ol>
+                </nav>
+                
+                <div class="card">
+                    <img src="{{ project.image }}" class="card-img-top" alt="{{ project.title }}" style="height: 400px; object-fit: cover;">
+                    <div class="card-body p-5">
+                        <h1 class="card-title mb-4">
+                            {{ project.title }}
+                            {% if project.featured %}
+                                <span class="badge ms-2" style="background-color: var(--primary-color);">Featured</span>
+                            {% endif %}
+                        </h1>
+                        
+                        <p class="lead mb-4">{{ project.description }}</p>
+                        
+                        <h3 class="h5 mb-3">Technologies Used</h3>
+                        <div class="mb-4">
+                            {% for tech in project.technologies %}
+                                <span class="tech-badge">{{ tech }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-flex gap-3 mb-4">
+                            <a href="{{ project.demo }}" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-external-link-alt me-2"></i>View Live Demo
+                            </a>
+                            <a href="{{ project.github }}" class="btn btn-outline-primary" target="_blank">
+                                <i class="fab fa-github me-2"></i>View Source Code
+                            </a>
+                        </div>
+                        
+                        <div class="mt-5">
+                            <h3 class="h5 mb-3">Project Details</h3>
+                            <p>This project demonstrates advanced software engineering principles including scalable architecture, clean code practices, and modern development methodologies. The solution addresses real-world business challenges while maintaining high performance and user experience standards.</p>
+                            
+                            <h4 class="h6 mt-4 mb-2">Key Features:</h4>
+                            <ul style="color: var(--text-secondary);">
+                                <li>Scalable and maintainable architecture</li>
+                                <li>Comprehensive testing and quality assurance</li>
+                                <li>Modern development practices and patterns</li>
+                                <li>Performance optimized for enterprise use</li>
+                                <li>Intuitive user interface and experience</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="text-center mt-5">
+                            <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
