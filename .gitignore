@@ -1,5 +1,5 @@
 """
-# Add to your .gitignore file
+# Python files
 static/*.pdf
 static/resume*
 downloads/
