@@ -46,8 +46,16 @@ jobs:
         ssh -i ~/.ssh/deploy_key portfolio@${{ secrets.SERVER_HOST }} << 'EOF'
           cd /opt/portfolio
           
-          # Pull latest code (including docker-compose.yml)
-          git pull origin main
+          # Initialize git repository if not exists
+          if [ ! -d ".git" ]; then
+            echo "Initializing git repository..."
+            git init
+            git remote add origin git@github.com:${{ github.repository }}.git
+          fi
+          
+          # Pull latest code
+          git fetch origin main
+          git reset --hard origin/main
           
           # Create .env if missing
           if [ ! -f .env ]; then
