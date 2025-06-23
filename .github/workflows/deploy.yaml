@@ -46,16 +46,23 @@ jobs:
         ssh -i ~/.ssh/deploy_key portfolio@${{ secrets.SERVER_HOST }} << 'EOF'
           cd /opt/portfolio
           
+          # Pull latest code (including docker-compose.yml)
+          git pull origin main
+          
+          # Create .env if missing
+          if [ ! -f .env ]; then
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
+            echo "SECRET_KEY=$(openssl rand -hex 32)" >> .env
+          fi
+          
           # Pull latest image
           docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
           
-          # Stop existing containers
+          # Stop and start with compose
           docker-compose down || true
-          
-          # Start with new image
           docker-compose up -d
           
-          # Wait and health check
+          # Health check
           sleep 30
           if curl -f http://localhost:5000/; then
             echo "✅ Deployment successful!"
