@@ -1,0 +1,3 @@
+services:
+  portfolio-app:
+    image: jaquesburger/portfolio:latest
