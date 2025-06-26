@@ -13,7 +13,7 @@ services:
       - /var/log/portfolio:/app/logs
       - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - FLASK_DEBUG=false
       - RESUME_PATH=static/secure
       - RESUME_FILENAME=Jaques_Burger_Resume.pdf
