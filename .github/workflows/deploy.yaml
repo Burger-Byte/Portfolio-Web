@@ -24,11 +24,11 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/arm64  # Important: Pi5 uses ARM64
+        platforms: linux/arm64  # Pi5 uses ARM64
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/your-app:latest
-          ${{ secrets.DOCKER_USERNAME }}/your-app:${{ github.sha }}
+          ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          ${{ secrets.DOCKER_USERNAME }}/portfolio:${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -37,27 +37,48 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Debug - Check current directory and files
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Files in current directory:"
+        ls -la
+        echo "Looking for docker-compose.yml:"
+        find . -name "docker-compose.yml" -type f
+    
     - name: Create application directory
       run: |
-        sudo mkdir -p /opt/your-app
-        sudo chown $USER:$USER /opt/your-app
+        sudo mkdir -p /opt/portfolio
+        sudo chown $USER:$USER /opt/portfolio
     
-    - name: Copy docker-compose file
+    - name: Copy docker-compose file and configs
       run: |
-        cp docker-compose.yml /opt/your-app/
-        cd /opt/your-app
+        # Copy from current working directory to /opt/portfolio
+        if [ -f "docker-compose.yml" ]; then
+          cp docker-compose.yml /opt/portfolio/
+          echo "✅ Copied docker-compose.yml"
+        else
+          echo "❌ docker-compose.yml not found in $(pwd)"
+          echo "Available files:"
+          ls -la
+          exit 1
+        fi
+        
+        # Copy any other config files if they exist
+        [ -f ".env.example" ] && cp .env.example /opt/portfolio/ || true
+        [ -f "entrypoint.sh" ] && cp entrypoint.sh /opt/portfolio/ || true
     
     - name: Pull latest Docker image
       run: |
-        docker pull ${{ secrets.DOCKER_USERNAME }}/your-app:latest
+        docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
     
     - name: Deploy with Docker Compose
       run: |
-        cd /opt/your-app
+        cd /opt/portfolio
         
         # Create .env file with secrets
         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
         echo "IMAGE_TAG=latest" >> .env
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY || 'fallback-secret-key' }}" >> .env
         
         # Stop existing containers
         docker-compose down || true
@@ -71,11 +92,16 @@ jobs:
     - name: Health check
       run: |
         sleep 30
-        if curl -f http://localhost:80/; then
-          echo "✅ Deployment successful!"
+        # Try HTTPS first, then HTTP, then port 5000 for fallback
+        if curl -f https://jaquesburger.com/health; then
+          echo "✅ HTTPS Deployment successful!"
+        elif curl -f http://jaquesburger.com/health; then
+          echo "✅ HTTP Deployment successful!"
+        elif curl -f http://localhost:5000/health; then
+          echo "✅ Development mode deployment successful!"
         else
           echo "❌ Deployment failed!"
-          docker-compose -f /opt/your-app/docker-compose.yml logs
+          cd /opt/portfolio
+          docker-compose logs portfolio-app
           exit 1
         fi
-        EOF
