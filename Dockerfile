@@ -1,42 +1,46 @@
-# Use Python 3.9 slim image
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better Docker layer caching
+# Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install gunicorn for production
+RUN pip install gunicorn
 
 # Copy application code
 COPY . .
 
-# Create directories for mounted volumes
-RUN mkdir -p /app/static/secure \
-    && mkdir -p /app/logs \
-    && mkdir -p /app/data
+# Copy configuration files
+COPY gunicorn_config.py .
+COPY entrypoint.sh .
+
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
+# Create logs directory
+RUN mkdir -p /app/logs
 
 # Create non-root user for security
-RUN useradd -m -u 1000 portfolio && \
-    chown -R portfolio:portfolio /app
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN chown -R appuser:appuser /app
+USER appuser
 
-# Switch to non-root user
-USER portfolio
+# Expose ports
+EXPOSE 80 443 5000
 
-# Expose port 5000
-EXPOSE 5000
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5000/ || exit 1
-
-# Run application with Gunicorn (production WSGI server)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+# Use entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]
