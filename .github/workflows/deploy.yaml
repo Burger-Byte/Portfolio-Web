@@ -27,8 +27,8 @@ jobs:
         platforms: linux/arm64  # Important: Pi5 uses ARM64
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/your-app:latest
-          ${{ secrets.DOCKER_USERNAME }}/your-app:${{ github.sha }}
+          ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          ${{ secrets.DOCKER_USERNAME }}/portfolio:${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -39,21 +39,21 @@ jobs:
     
     - name: Create application directory
       run: |
-        sudo mkdir -p /opt/your-app
-        sudo chown $USER:$USER /opt/your-app
+        sudo mkdir -p /opt/portfolio
+        sudo chown $USER:$USER /opt/portfolio
     
     - name: Copy docker-compose file
       run: |
-        cp docker-compose.yml /opt/your-app/
-        cd /opt/your-app
+        cp docker-compose.yml /opt/portfolio/
+        cd /opt/portfolio
     
     - name: Pull latest Docker image
       run: |
-        docker pull ${{ secrets.DOCKER_USERNAME }}/your-app:latest
+        docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
     
     - name: Deploy with Docker Compose
       run: |
-        cd /opt/your-app
+        cd /opt/portfolio
         
         # Create .env file with secrets
         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
@@ -75,7 +75,7 @@ jobs:
           echo "✅ Deployment successful!"
         else
           echo "❌ Deployment failed!"
-          docker-compose -f /opt/your-app/docker-compose.yml logs
+          docker-compose -f /opt/portfolio/docker-compose.yml logs
           exit 1
         fi
         EOF
