@@ -1,7 +1,9 @@
 name: Deploy to Pi5 via Docker Hub
+
 on:
   push:
     branches: [ main ]
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -22,7 +24,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/arm64  # Pi5 uses ARM64
+        platforms: linux/arm64  # Important: Pi5 uses ARM64
         push: true
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
@@ -35,14 +37,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Debug - Check current directory and files
-      run: |
-        echo "Current directory: $(pwd)"
-        echo "Files in current directory:"
-        ls -la
-        echo "Looking for docker-compose.yml:"
-        find . -name "docker-compose.yml" -type f
-    
     - name: Create application directory
       run: |
         sudo mkdir -p /opt/portfolio
@@ -50,12 +44,15 @@ jobs:
     
     - name: Copy docker-compose file and configs
       run: |
-        # Copy from current working directory to /opt/portfolio
+        # Look for docker-compose file with either .yml or .yaml extension
         if [ -f "docker-compose.yml" ]; then
           cp docker-compose.yml /opt/portfolio/
           echo "✅ Copied docker-compose.yml"
+        elif [ -f "docker-compose.yaml" ]; then
+          cp docker-compose.yaml /opt/portfolio/docker-compose.yml
+          echo "✅ Copied docker-compose.yaml as docker-compose.yml"
         else
-          echo "❌ docker-compose.yml not found in $(pwd)"
+          echo "❌ Neither docker-compose.yml nor docker-compose.yaml found in $(pwd)"
           echo "Available files:"
           ls -la
           exit 1
