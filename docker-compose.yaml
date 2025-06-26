@@ -3,21 +3,26 @@ version: '3.3'
 services:
   portfolio-app:
     image: ${DOCKER_USERNAME}/portfolio:latest
-    container_name: portfolio_app
+    container_name: portfolio_web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "5000:5000"
     restart: unless-stopped
     volumes:
       - /secure/portfolio/resume:/app/static/secure:ro
       - /var/log/portfolio:/app/logs
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=false
       - RESUME_PATH=static/secure
       - RESUME_FILENAME=Jaques_Burger_Resume.pdf
       - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
+      - SSL_CERT_PATH=/etc/letsencrypt/live/jaquesburger.com/fullchain.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/jaquesburger.com/privkey.pem
     networks:
       - portfolio_network
-    ports:
-      - "5000:5000"
 
 networks:
   portfolio_network:
