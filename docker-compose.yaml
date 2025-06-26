@@ -5,8 +5,8 @@ services:
     image: ${DOCKER_USERNAME}/portfolio:latest
     container_name: portfolio_web
     ports:
-      - "80:5000"
-      - "443:5000"
+      - "80:80"
+      - "443:443"
     restart: unless-stopped
     volumes:
       - /secure/portfolio/resume:/app/static/secure:ro
