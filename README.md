@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-A modern, responsive portfolio web application built with Flask, Docker, and GitHub Actions.\n
+A modern, responsive portfolio web application built with Flask, Docker, and GitHub Actions.
 This project showcases software engineering skills, project highlights, and a knowledge map, 
 all deployable with production-ready best practices.
 </p>
