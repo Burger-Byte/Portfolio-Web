@@ -23,24 +23,82 @@ all deployable with production-ready best practices.
 
 
 
-## 📊 Application Flow
+## 📊 Deployment Pipeline
 
-```mermaid
+flowchart LR
+    A[👨‍💻 Developer] --> B[📝 Git Push to main]
+    B --> C[🔄 GitHub Actions]
+    C --> D[🐳 Docker Build]
+    D --> E[📦 Push to Docker Hub]
+    E --> F[🚀 Deploy to Server]
+    F --> G[✅ Health Check]
+    
+    subgraph "🏗️ Build Process"
+        D --> D1[Copy Files]
+        D1 --> D2[Install Dependencies]
+        D2 --> D3[Configure Gunicorn]
+    end
+    
+    subgraph "🖥️ Server Infrastructure"
+        F --> F1[🐋 Docker Compose Up]
+        F1 --> F2[🌐 NGINX Proxy]
+        F2 --> F3[🔒 SSL/HTTPS]
+        F3 --> F4[🌍 Domain Access]
+    end
+    
+    style A fill:#e1f5fe
+    style G fill:#c8e6c9
+    style F4 fill:#fff3e0
+
+## 🏗️ Runtime Architecture
+
 flowchart TD
-    A[User Request] --> B["Flask App (app.py)"]
-    B --> C{Route}
-    C --> D["Home Page (portfolio_home.html)"]
-    C --> E["About Page (portfolio_about.html)"]
-    C --> F["Contact Page (portfolio_contact.html)"]
-    C --> G[Resume Download]
-    C --> H[Health Check JSON]
-    B --> I[Templates & Static Files]
-    I --> J["portfolio_base.html, CSS, Images"]
-    B --> K["Docker / Gunicorn (Production)"]
-    K --> L[GitHub Actions CI/CD]
-    L --> M[Deployment]
-```
-
+    subgraph "🌐 Internet"
+        U[👤 User Request]
+        D[🌍 yourdomain.com]
+    end
+    
+    subgraph "🏠 Home Network"
+        R[🌐 Router<br/>Port Forward<br/>80/443]
+    end
+    
+    subgraph "🖥️ Your Server"
+        N[⚡ NGINX<br/>Reverse Proxy<br/>SSL Termination]
+        
+        subgraph "🐳 Docker Container"
+            G[🦄 Gunicorn<br/>WSGI Server]
+            F[🐍 Flask App<br/>app.py]
+        end
+        
+        subgraph "📁 App Structure"
+            T[📄 Templates<br/>Jinja2 HTML]
+            S[🎨 Static Files<br/>CSS, Images, JS]
+            C[⚙️ Config<br/>gunicorn_config.py]
+        end
+    end
+    
+    U --> D
+    D --> R
+    R --> N
+    N --> G
+    G --> F
+    F --> T
+    F --> S
+    F --> C
+    
+    subgraph "🛣️ Flask Routes"
+        F --> H1[🏠 Home /]
+        F --> H2[👤 About /about]
+        F --> H3[📞 Contact /contact]
+        F --> H4[📄 Resume /resume]
+        F --> H5[❤️ Health /health]
+    end
+    
+    style U fill:#e3f2fd
+    style D fill:#e8f5e8
+    style N fill:#fff3e0
+    style F fill:#f3e5f5
+    style G fill:#e0f2f1
 
 ## 🛠️ Local Development Setup
 
