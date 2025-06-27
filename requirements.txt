@@ -3,3 +3,8 @@ gunicorn==21.2.0
 python-dotenv==1.0.0
 Werkzeug==2.3.7
 gunicorn>=20.1.0
+Flask-Mail==0.9.1
+requests==2.31.0
+WTForms==3.0.1
+Flask-WTF==1.1.1
+Flask-Limiter==3.5.0

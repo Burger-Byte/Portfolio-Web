@@ -2,17 +2,26 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import os
 import threading
+from flask_mail import Mail, Message
+import requests
 
 app = Flask(__name__)
 
 app.secret_key = os.getenv('SECRET_KEY', 'jaques-portfolio-secret-key')
+app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
+app.config['RECAPTCHA_SITE_KEY'] = os.environ.get('RECAPTCHA_SITE_KEY')
+app.config['RECAPTCHA_SECRET_KEY'] = os.environ.get('RECAPTCHA_SECRET_KEY')
 
 PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
         'title': 'Software Engineer',
         'tagline': 'Creating innovative software solutions with over a decade of experience',
-        'email': 'info@jaquesburger.com',
         'location': 'Durban, South Africa',
         'linkedin': 'https://www.linkedin.com/in/jaques-b-0519358a/',
         'github': 'https://github.com/Burger-Byte',
@@ -41,18 +50,6 @@ def home():
 def about():
     return render_template('portfolio_about.html', data=PORTFOLIO_DATA)
 
-@app.route('/contact', methods=['GET', 'POST'])
-def contact():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        subject = request.form.get('subject')
-        message = request.form.get('message')
-        
-        flash(f'Thank you {name}! Your message has been received. I\'ll get back to you soon.', 'success')
-        return redirect(url_for('contact'))
-    
-    return render_template('portfolio_contact.html', data=PORTFOLIO_DATA)
 
 @app.route('/download-resume')
 def download_resume():
@@ -63,6 +60,69 @@ def download_resume():
 def health_check():
     """Health check endpoint for monitoring"""
     return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
+
+def verify_recaptcha(recaptcha_response):
+    secret_key = app.config['RECAPTCHA_SECRET_KEY']
+    payload = {
+        'secret': secret_key,
+        'response': recaptcha_response,
+        'remoteip': request.environ.get('REMOTE_ADDR')
+    }
+    response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
+    result = response.json()
+    return result.get('success', False)
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            subject = request.form.get('subject', '').strip()
+            message = request.form.get('message', '').strip()
+            recaptcha_response = request.form.get('g-recaptcha-response')
+            
+            if not all([name, email, subject, message]):
+                flash('All fields are required.', 'error')
+                return render_template('portfolio_contact.html', 
+                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                                     data=PORTFOLIO_DATA)
+            
+            if not verify_recaptcha(recaptcha_response):
+                flash('Please complete the CAPTCHA verification.', 'error')
+                return render_template('portfolio_contact.html', 
+                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                                     data=PORTFOLIO_DATA)
+            
+            msg = Message(
+                subject=f"Portfolio Contact: {subject}",
+                recipients=['jaqburger@outlook.com'],
+                body=f"""
+New contact form submission:
+
+Name: {name}
+Email: {email}
+Subject: {subject}
+
+Message:
+{message}
+
+Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                """,
+                sender=app.config['MAIL_DEFAULT_SENDER']
+            )
+            
+            mail.send(msg)
+            flash('Thank you! Your message has been sent successfully.', 'success')
+            return redirect(url_for('contact'))
+            
+        except Exception as e:
+            print(f"Error sending email: {str(e)}")
+            flash('Sorry, there was an error sending your message.', 'error')
+    
+    return render_template('portfolio_contact.html', 
+                         recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                         data=PORTFOLIO_DATA)
 
 def create_http_app():
     """Create a simple HTTP app that redirects to HTTPS"""
