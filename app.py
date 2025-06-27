@@ -17,6 +17,8 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 app.config['RECAPTCHA_SITE_KEY'] = os.environ.get('RECAPTCHA_SITE_KEY')
 app.config['RECAPTCHA_SECRET_KEY'] = os.environ.get('RECAPTCHA_SECRET_KEY')
 
+mail = Mail(app)
+
 PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
