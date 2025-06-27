@@ -22,7 +22,6 @@ PORTFOLIO_DATA = {
         'name': 'Jaques Burger',
         'title': 'Software Engineer',
         'tagline': 'Creating innovative software solutions with over a decade of experience',
-        'email': 'info@jaquesburger.com',
         'location': 'Durban, South Africa',
         'linkedin': 'https://www.linkedin.com/in/jaques-b-0519358a/',
         'github': 'https://github.com/Burger-Byte',
@@ -86,12 +85,14 @@ def contact():
             if not all([name, email, subject, message]):
                 flash('All fields are required.', 'error')
                 return render_template('portfolio_contact.html', 
-                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'])
+                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                                     data=PORTFOLIO_DATA)
             
             if not verify_recaptcha(recaptcha_response):
                 flash('Please complete the CAPTCHA verification.', 'error')
                 return render_template('portfolio_contact.html', 
-                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'])
+                                     recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                                     data=PORTFOLIO_DATA)
             
             msg = Message(
                 subject=f"Portfolio Contact: {subject}",
@@ -120,7 +121,8 @@ Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             flash('Sorry, there was an error sending your message.', 'error')
     
     return render_template('portfolio_contact.html', 
-                         recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'])
+                         recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
+                         data=PORTFOLIO_DATA)
 
 def create_http_app():
     """Create a simple HTTP app that redirects to HTTPS"""
