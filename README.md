@@ -27,16 +27,16 @@ all deployable with production-ready best practices.
 
 ```mermaid
 flowchart TD
-    A[User Request] --> B[Flask App (app.py)]
+    A[User Request] --> B["Flask App (app.py)"]
     B --> C{Route}
-    C --> D[Home Page (portfolio_home.html)]
-    C --> E[About Page (portfolio_about.html)]
-    C --> F[Contact Page (portfolio_contact.html)]
+    C --> D["Home Page (portfolio_home.html)"]
+    C --> E["About Page (portfolio_about.html)"]
+    C --> F["Contact Page (portfolio_contact.html)"]
     C --> G[Resume Download]
     C --> H[Health Check JSON]
     B --> I[Templates & Static Files]
-    I --> J[portfolio_base.html, CSS, Images]
-    B --> K[Docker / Gunicorn (Production)]
+    I --> J["portfolio_base.html, CSS, Images"]
+    B --> K["Docker / Gunicorn (Production)"]
     K --> L[GitHub Actions CI/CD]
     L --> M[Deployment]
 ```
