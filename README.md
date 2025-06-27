@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-A modern, responsive portfolio web application built with Flask, Docker, and GitHub Actions. <br>
+A modern, responsive portfolio web application built with Flask, Docker, and GitHub Actions.\n
 This project showcases software engineering skills, project highlights, and a knowledge map, 
 all deployable with production-ready best practices.
 </p>
@@ -29,9 +29,9 @@ all deployable with production-ready best practices.
 flowchart TD
     A[User Request] -->|HTTP/HTTPS| B[Flask App (app.py)]
     B --> C{Route}
-    C -->|"/"| D[Home Page<br>portfolio_home.html]
-    C -->|"/about"| E[About Page<br>portfolio_about.html]
-    C -->|"/contact"| F[Contact Page<br>portfolio_contact.html]
+    C -->|"/"| D[Home Page (portfolio_home.html)]
+    C -->|"/about"| E[About Page (portfolio_about.html)]
+    C -->|"/contact"| F[Contact Page (portfolio_contact.html)]
     C -->|"/download-resume"| G[Resume Download]
     C -->|"/health"| H[Health Check JSON]
     B --> I[Templates & Static Files]
