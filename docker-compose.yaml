@@ -18,6 +18,10 @@ services:
       - RESUME_PATH=static/secure
       - RESUME_FILENAME=Jaques_Burger_Resume.pdf
       - SECRET_KEY=${SECRET_KEY:-fallback-secret-key}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
       - SSL_CERT_PATH=/etc/letsencrypt/live/jaquesburger.com/fullchain.pem
       - SSL_KEY_PATH=/etc/letsencrypt/live/jaquesburger.com/privkey.pem
     networks:
