@@ -23,34 +23,23 @@ all deployable with production-ready best practices.
 
 
 
-## 📁 Project Structure
+## 📊 Application Flow
 
-
-.
-│   app.py                  # Main Flask application
-│   Dockerfile              # Docker build instructions
-│   docker-compose.yaml     # Multi-container orchestration
-│   entrypoint.sh           # Entrypoint script for container
-│   gunicorn_config.py      # Gunicorn server config
-│   requirements.txt        # Python dependencies
-│   .gitignore
-│   README.md
-│
-├───.github/workflows/
-│       deploy.yaml         # GitHub Actions deployment workflow
-│
-├───static/
-│       JB.jpg              # Profile image
-│       readme_logo.png     # Logo for README
-│
-└───templates/
-        portfolio_about.html
-        portfolio_base.html
-        portfolio_home.html
-        portfolio_project_detail.html
-        projects.html
-
-
+```mermaid
+flowchart TD
+    A[User Request] -->|HTTP/HTTPS| B[Flask App (app.py)]
+    B --> C{Route}
+    C -->|"/"| D[Home Page<br>portfolio_home.html]
+    C -->|"/about"| E[About Page<br>portfolio_about.html]
+    C -->|"/contact"| F[Contact Page<br>portfolio_contact.html]
+    C -->|"/download-resume"| G[Resume Download]
+    C -->|"/health"| H[Health Check JSON]
+    B --> I[Templates & Static Files]
+    I --> J[portfolio_base.html, CSS, Images]
+    B --> K[Docker / Gunicorn (Production)]
+    K --> L[GitHub Actions CI/CD]
+    L --> M[Deployment]
+```
 
 
 ## 🛠️ Local Development Setup
