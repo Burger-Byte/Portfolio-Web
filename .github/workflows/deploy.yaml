@@ -74,6 +74,10 @@ jobs:
         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
         echo "IMAGE_TAG=latest" >> .env
         echo "SECRET_KEY=${{ secrets.SECRET_KEY || 'fallback-secret-key' }}" >> .env
+        echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+        echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+        echo "RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}" >> .env
+        echo "RECAPTCHA_SECRET_KEY=${{ secrets.RECAPTCHA_SECRET_KEY }}" >> .env
         
         # Stop existing containers
         docker-compose down || true
