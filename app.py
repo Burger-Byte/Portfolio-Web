@@ -51,18 +51,6 @@ def home():
 def about():
     return render_template('portfolio_about.html', data=PORTFOLIO_DATA)
 
-@app.route('/contact', methods=['GET', 'POST'])
-def contact():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        subject = request.form.get('subject')
-        message = request.form.get('message')
-        
-        flash(f'Thank you {name}! Your message has been received. I\'ll get back to you soon.', 'success')
-        return redirect(url_for('contact'))
-    
-    return render_template('portfolio_contact.html', data=PORTFOLIO_DATA)
 
 @app.route('/download-resume')
 def download_resume():
