@@ -24,7 +24,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/arm64  # Important: Pi5 uses ARM64
+        platforms: linux/arm64
         push: true
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
