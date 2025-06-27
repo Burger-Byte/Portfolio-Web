@@ -24,7 +24,7 @@ all deployable with production-ready best practices.
 
 
 ## 📊 Deployment Pipeline
-
+```mermaid
 flowchart LR
     A[👨‍💻 Developer] --> B[📝 Git Push to main]
     B --> C[🔄 GitHub Actions]
@@ -49,9 +49,10 @@ flowchart LR
     style A fill:#e1f5fe
     style G fill:#c8e6c9
     style F4 fill:#fff3e0
+```
 
 ## 🏗️ Runtime Architecture
-
+```mermaid
 flowchart TD
     subgraph "🌐 Internet"
         U[👤 User Request]
@@ -99,6 +100,7 @@ flowchart TD
     style N fill:#fff3e0
     style F fill:#f3e5f5
     style G fill:#e0f2f1
+```
 
 ## 🛠️ Local Development Setup
 
