@@ -1,0 +1,200 @@
+{% extends "portfolio_base.html" %}
+
+{% block title %}Blog - {{ data.personal_info.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-top: 100px;"></div>
+
+<!-- Header -->
+<section class="py-5 bg-dark-custom">
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-4" style="color: var(--text-primary);">📝 Blogging My Journey</h1>
+            <p class="lead" style="color: var(--text-secondary);">My Thoughts, insights, and experiences from my journey as I take on projects and learn new tech</p>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Posts -->
+<section class="py-5">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert" style="background: var(--card-bg); border-color: var(--border-color); color: var(--text-primary);">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if posts %}
+            <div class="row">
+                {% for post in posts %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="blog-card">
+                        <div class="blog-card-body">
+                            <h5 class="blog-card-title">
+                                <a href="{{ url_for('blog_post', slug=post.slug) }}">
+                                    {{ post.title }}
+                                </a>
+                            </h5>
+                            <div class="blog-meta">
+                                <i class="fas fa-calendar"></i> 
+                                {{ post.date.strftime('%B %d, %Y') }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-user"></i> {{ post.author }}
+                            </div>
+                            {% if post.excerpt %}
+                                <p class="blog-excerpt">{{ post.excerpt }}</p>
+                            {% else %}
+                                <p class="blog-excerpt">{{ post.content[:150] }}...</p>
+                            {% endif %}
+                            {% if post.tags %}
+                                <div class="blog-tags">
+                                    {% for tag in post.tags %}
+                                        <span class="blog-tag">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <a href="{{ url_for('blog_post', slug=post.slug) }}" class="blog-read-more">
+                                Read More <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-12 text-center">
+                    <div class="no-posts-card">
+                        <h3 style="color: var(--text-primary);">📚 No blog posts yet</h3>
+                        <p style="color: var(--text-secondary);">Check back soon for new content!</p>
+                        <p style="color: var(--text-secondary); font-style: italic;">To add blog posts, create markdown files in the <code>blog_posts/</code> directory.</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.blog-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    height: 100%;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    border-color: var(--primary-color);
+}
+
+.blog-card-body {
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.blog-card-title {
+    margin-bottom: 1rem;
+    flex-grow: 0;
+}
+
+.blog-card-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.blog-card-title a:hover {
+    color: var(--primary-color);
+    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.blog-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    flex-grow: 0;
+}
+
+.blog-excerpt {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+.blog-tags {
+    margin-bottom: 1rem;
+    flex-grow: 0;
+}
+
+.blog-tag {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.3rem;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.blog-read-more {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+    flex-grow: 0;
+}
+
+.blog-read-more:hover {
+    color: var(--secondary-color);
+    transform: translateX(5px);
+}
+
+.no-posts-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 3rem;
+    margin: 2rem auto;
+    max-width: 500px;
+}
+
+.no-posts-card code {
+    background: var(--darker-bg);
+    color: var(--primary-color);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 768px) {
+    .blog-card-body {
+        padding: 1rem;
+    }
+    
+    .no-posts-card {
+        padding: 2rem;
+        margin: 1rem;
+    }
+}
+</style>
+{% endblock %}
