@@ -19,6 +19,9 @@ app.config['RECAPTCHA_SECRET_KEY'] = os.environ.get('RECAPTCHA_SECRET_KEY')
 
 mail = Mail(app)
 
+BLOG_DIR = Path('blog_posts')
+BLOG_DIR.mkdir(exist_ok=True)
+
 PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
@@ -36,6 +39,59 @@ PORTFOLIO_DATA = {
                      scalable solutions that drive business success and deliver exceptional user experiences.'''
     }
 }
+
+def load_blog_posts():
+    """Load blog posts from markdown files"""
+    posts = []
+    
+    for md_file in BLOG_DIR.glob('*.md'):
+        try:
+            with open(md_file, 'r', encoding='utf-8') as f:
+                post = frontmatter.load(f)
+                
+            # Extract date from filename (YYYY-MM-DD-slug.md format)
+            filename = md_file.stem
+            date_match = re.match(r'(\d{4}-\d{2}-\d{2})-(.*)', filename)
+            
+            if date_match:
+                date_str, slug = date_match.groups()
+                publish_date = datetime.strptime(date_str, '%Y-%m-%d')
+            else:
+                # Fallback to file modification time
+                publish_date = datetime.fromtimestamp(md_file.stat().st_mtime)
+                slug = filename
+            
+            # Build post data
+            post_data = {
+                'title': post.metadata.get('title', slug.replace('-', ' ').title()),
+                'slug': slug,
+                'content': post.content,
+                'content_html': markdown.markdown(
+                    post.content, 
+                    extensions=['codehilite', 'fenced_code', 'toc']
+                ),
+                'excerpt': post.metadata.get('excerpt', ''),
+                'tags': post.metadata.get('tags', []),
+                'published': post.metadata.get('published', True),
+                'author': post.metadata.get('author', 'Jaques Burger'),
+                'date': publish_date,
+                'filename': md_file.name
+            }
+            
+            posts.append(post_data)
+            
+        except Exception as e:
+            print(f"Error loading {md_file}: {e}")
+            continue
+    
+    return posts
+
+def create_slug(title):
+    """Create URL-friendly slug from title"""
+    slug = re.sub(r'[^\w\s-]', '', title.lower())
+    slug = re.sub(r'[-\s]+', '-', slug)
+    return slug.strip('-')
+
 
 @app.before_request
 def force_https():
@@ -125,6 +181,40 @@ Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     return render_template('portfolio_contact.html', 
                          recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
                          data=PORTFOLIO_DATA)
+
+
+@app.route('/blog')
+def blog():
+    """Display all published blog posts"""
+    posts = load_blog_posts()
+    # Filter published posts and sort by date (newest first)
+    published_posts = [post for post in posts if post['published']]
+    published_posts.sort(key=lambda x: x['date'], reverse=True)
+    
+    return render_template('blog.html', posts=published_posts, data=PORTFOLIO_DATA)
+
+@app.route('/blog/<slug>')
+def blog_post(slug):
+    """Display individual blog post"""
+    posts = load_blog_posts()
+    post = next((p for p in posts if p['slug'] == slug), None)
+    
+    if not post or not post['published']:
+        abort(404)
+    
+    return render_template('blog_post.html', post=post, data=PORTFOLIO_DATA)
+
+@app.route('/blog/feed.xml')
+def blog_feed():
+    """RSS feed for blog posts"""
+    posts = load_blog_posts()
+    published_posts = [post for post in posts if post['published']]
+    published_posts.sort(key=lambda x: x['date'], reverse=True)
+    
+    return render_template('blog_feed.xml', 
+                         posts=published_posts[:10], 
+                         data=PORTFOLIO_DATA), 200, {'Content-Type': 'application/xml'}
+
 
 def create_http_app():
     """Create a simple HTTP app that redirects to HTTPS"""

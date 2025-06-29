@@ -8,3 +8,6 @@ requests==2.31.0
 WTForms==3.0.1
 Flask-WTF==1.1.1
 Flask-Limiter==3.5.0
+PyYAML==6.0.2 
+markdown==3.8.2 
+python-frontmatter==1.1.0
