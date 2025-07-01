@@ -16,13 +16,238 @@
                         <i class="fas fa-arrow-left"></i> Back to Blog
                     </a>
                 </div>
+                
+                {% if series_nav %}
+                <!-- Series Navigation -->
+                <div class="series-navigation mb-4">
+                    <div class="series-nav-header">
+                        <h5 class="series-nav-title">
+                            <i class="fas fa-book"></i> 
+                            Part {{ series_nav.current_order }} of {{ series_nav.total_posts }}: 
+                            <a href="{{ url_for('blog_series', series_key=post.series) }}">{{ series_nav.series.title }}</a>
+                        </h5>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="series-progress-bar" style="--progress: {{ (series_nav.current_order / series_nav.total_posts * 100) | round(1) }}%">
+                        <div class="series-progress-fill"></div>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <div class="series-nav-links">
+                        {% if series_nav.previous %}
+                            <a href="{{ url_for('blog_post', slug=series_nav.previous.slug) }}" class="series-nav-link series-nav-prev">
+                                <i class="fas fa-chevron-left"></i>
+                                <div class="series-nav-link-content">
+                                    <span class="series-nav-link-label">Previous</span>
+                                    <span class="series-nav-link-title">{{ series_nav.previous.title }}</span>
+                                </div>
+                            </a>
+                        {% else %}
+                            <div class="series-nav-link series-nav-disabled">
+                                <i class="fas fa-chevron-left"></i>
+                                <div class="series-nav-link-content">
+                                    <span class="series-nav-link-label">This is the first post</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('blog_series', series_key=post.series) }}" class="series-nav-overview">
+                            <i class="fas fa-list"></i>
+                            <span>View All Parts</span>
+                        </a>
+
+                        {% if series_nav.next %}
+                            <a href="{{ url_for('blog_post', slug=series_nav.next.slug) }}" class="series-nav-link series-nav-next">
+                                <div class="series-nav-link-content">
+                                    <span class="series-nav-link-label">Next</span>
+                                    <span class="series-nav-link-title">{{ series_nav.next.title }}</span>
+                                </div>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% else %}
+                            <div class="series-nav-link series-nav-disabled">
+                                <div class="series-nav-link-content">
+                                    <span class="series-nav-link-label">Last post in series</span>
+                                </div>
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <style>
+                .series-navigation {
+                    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                    border-radius: 15px;
+                    padding: 1.5rem;
+                    margin-bottom: 2rem;
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                }
+
+                .series-nav-header {
+                    margin-bottom: 1rem;
+                }
+
+                .series-nav-title {
+                    color: white;
+                    margin: 0;
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                }
+
+                .series-nav-title a {
+                    color: white;
+                    text-decoration: none;
+                    border-bottom: 1px solid rgba(255,255,255,0.3);
+                    transition: border-color 0.3s ease;
+                }
+
+                .series-nav-title a:hover {
+                    border-bottom-color: white;
+                    color: white;
+                }
+
+                .series-progress-bar {
+                    background: rgba(255,255,255,0.2);
+                    height: 6px;
+                    border-radius: 3px;
+                    margin-bottom: 1.5rem;
+                    overflow: hidden;
+                }
+
+                .series-progress-fill {
+                    background: white;
+                    height: 100%;
+                    border-radius: 3px;
+                    transition: width 0.3s ease;
+                    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+                    width: var(--progress);
+                }
+
+                .series-nav-links {
+                    display: flex;
+                    gap: 1rem;
+                    align-items: center;
+                }
+
+                .series-nav-link {
+                    background: rgba(255,255,255,0.1);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 10px;
+                    padding: 1rem;
+                    text-decoration: none;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.8rem;
+                    transition: all 0.3s ease;
+                    flex: 1;
+                    backdrop-filter: blur(10px);
+                }
+
+                .series-nav-link:hover {
+                    background: rgba(255,255,255,0.2);
+                    border-color: rgba(255,255,255,0.4);
+                    transform: translateY(-2px);
+                    color: white;
+                }
+
+                .series-nav-disabled {
+                    background: rgba(255,255,255,0.05);
+                    border-color: rgba(255,255,255,0.1);
+                    color: rgba(255,255,255,0.5);
+                    cursor: not-allowed;
+                }
+
+                .series-nav-disabled:hover {
+                    transform: none;
+                    background: rgba(255,255,255,0.05);
+                }
+
+                .series-nav-link-content {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.2rem;
+                }
+
+                .series-nav-link-label {
+                    font-size: 0.8rem;
+                    opacity: 0.8;
+                    font-weight: 500;
+                }
+
+                .series-nav-link-title {
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    line-height: 1.2;
+                }
+
+                .series-nav-next {
+                    text-align: right;
+                }
+
+                .series-nav-next .series-nav-link-content {
+                    align-items: flex-end;
+                }
+
+                .series-nav-overview {
+                    background: rgba(255,255,255,0.15);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    border-radius: 10px;
+                    padding: 1rem;
+                    text-decoration: none;
+                    color: white;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.5rem;
+                    transition: all 0.3s ease;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    backdrop-filter: blur(10px);
+                    flex-shrink: 0;
+                }
+
+                .series-nav-overview:hover {
+                    background: rgba(255,255,255,0.25);
+                    border-color: rgba(255,255,255,0.5);
+                    transform: translateY(-2px);
+                    color: white;
+                }
+
+                @media (max-width: 768px) {
+                    .series-navigation {
+                        padding: 1rem;
+                    }
+
+                    .series-nav-links {
+                        flex-direction: column;
+                        gap: 0.8rem;
+                    }
+
+                    .series-nav-link {
+                        padding: 0.8rem;
+                    }
+
+                    .series-nav-link-title {
+                        font-size: 0.85rem;
+                    }
+
+                    .series-nav-overview {
+                        padding: 0.8rem;
+                        order: -1;
+                    }
+                }
+                </style>
 
                 <!-- Post Header -->
                 <article class="blog-post-article">
                     <header class="blog-post-header">
                         <h1 class="blog-post-title">{{ post.title }}</h1>
                         <div class="blog-post-meta">
-                            <i class="fas fa-calendar"></i> {{ post.date.strftime('%B %d, %Y') }}
+                            <i class="fas fa-calendar"></i> {{ post.date.strftime('%B %d, %Y') if post.date else 'No date' }}
                             <span class="mx-2">•</span>
                             <i class="fas fa-user"></i> {{ post.author }}
                         </div>
