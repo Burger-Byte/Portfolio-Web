@@ -45,50 +45,158 @@ PORTFOLIO_DATA = {
 }
 
 def load_blog_posts():
-    """Load blog posts from markdown files"""
+    """Load all blog posts with series support from blog_posts directory and subdirectories"""
     posts = []
+    blog_dir = 'blog_posts'
     
-    for md_file in BLOG_DIR.glob('*.md'):
-        try:
-            with open(md_file, 'r', encoding='utf-8') as f:
-                post = frontmatter.load(f)
+    if not os.path.exists(blog_dir):
+        os.makedirs(blog_dir, exist_ok=True)
+        return posts
+    
+    # Function to process a markdown file
+    def process_markdown_file(filepath, relative_path):
+        with open(filepath, 'r', encoding='utf-8') as file:
+            content = file.read()
+            
+            # Parse frontmatter
+            if content.startswith('---'):
+                parts = content.split('---', 2)
+                if len(parts) >= 3:
+                    frontmatter = parts[1].strip()
+                    post_content = parts[2].strip()
+                    
+                    # Parse YAML frontmatter
+                    import yaml
+                    from datetime import datetime
+                    metadata = yaml.safe_load(frontmatter)
+                    
+                    # Handle date parsing
+                    post_date = metadata.get('date')
+                    if post_date:
+                        if isinstance(post_date, str):
+                            try:
+                                # Try to parse string date
+                                post_date = datetime.strptime(post_date, '%Y-%m-%d')
+                            except ValueError:
+                                try:
+                                    # Try alternative format
+                                    post_date = datetime.strptime(post_date, '%Y-%m-%d %H:%M:%S')
+                                except ValueError:
+                                    print(f"Warning: Invalid date format in {relative_path}: {post_date}")
+                                    post_date = datetime.now()
+                        elif not isinstance(post_date, datetime):
+                            post_date = datetime.now()
+                    else:
+                        post_date = datetime.now()
+                    
+                    # Convert markdown to HTML
+                    import markdown
+                    html_content = markdown.markdown(post_content, extensions=['codehilite', 'fenced_code'])
+                    
+                    # Get filename without extension for default slug
+                    filename = os.path.basename(filepath)
+                    default_slug = filename[:-3] if filename.endswith('.md') else filename
+                    
+                    post = {
+                        'title': metadata.get('title', 'Untitled'),
+                        'date': post_date,
+                        'author': metadata.get('author', 'Anonymous'),
+                        'published': metadata.get('published', False),
+                        'tags': metadata.get('tags', []),
+                        'excerpt': metadata.get('excerpt', ''),
+                        'content': post_content,
+                        'content_html': html_content,
+                        'slug': metadata.get('slug', default_slug),
+                        # Series fields
+                        'series': metadata.get('series'),
+                        'series_title': metadata.get('series_title'),
+                        'series_order': metadata.get('series_order'),
+                        'series_description': metadata.get('series_description'),
+                        # Track file location
+                        'file_path': relative_path
+                    }
+                    return post
+        return None
+    
+    # Walk through blog_posts directory and all subdirectories
+    for root, dirs, files in os.walk(blog_dir):
+        for filename in files:
+            if filename.endswith('.md'):
+                filepath = os.path.join(root, filename)
+                relative_path = os.path.relpath(filepath, blog_dir)
                 
-            # Extract date from filename (YYYY-MM-DD-slug.md format)
-            filename = md_file.stem
-            date_match = re.match(r'(\d{4}-\d{2}-\d{2})-(.*)', filename)
-            
-            if date_match:
-                date_str, slug = date_match.groups()
-                publish_date = datetime.strptime(date_str, '%Y-%m-%d')
-            else:
-                # Fallback to file modification time
-                publish_date = datetime.fromtimestamp(md_file.stat().st_mtime)
-                slug = filename
-            
-            # Build post data
-            post_data = {
-                'title': post.metadata.get('title', slug.replace('-', ' ').title()),
-                'slug': slug,
-                'content': post.content,
-                'content_html': markdown.markdown(
-                    post.content, 
-                    extensions=['codehilite', 'fenced_code', 'toc']
-                ),
-                'excerpt': post.metadata.get('excerpt', ''),
-                'tags': post.metadata.get('tags', []),
-                'published': post.metadata.get('published', True),
-                'author': post.metadata.get('author', 'Jaques Burger'),
-                'date': publish_date,
-                'filename': md_file.name
-            }
-            
-            posts.append(post_data)
-            
-        except Exception as e:
-            print(f"Error loading {md_file}: {e}")
-            continue
+                post = process_markdown_file(filepath, relative_path)
+                if post:
+                    posts.append(post)
     
     return posts
+
+# Also update the constants at the top of your file:
+BLOG_DIR = Path('blog_posts')
+BLOG_DIR.mkdir(exist_ok=True)
+
+SERIES_DIR = Path('series')
+SERIES_DIR.mkdir(exist_ok=True)
+
+def get_series_data():
+    """Get organized series data"""
+    posts = load_blog_posts()
+    series_dict = {}
+    
+    for post in posts:
+        if post.get('series') and post.get('published'):
+            series_key = post['series']
+            if series_key not in series_dict:
+                series_dict[series_key] = {
+                    'key': series_key,
+                    'title': post.get('series_title', series_key.title().replace('-', ' ')),
+                    'description': post.get('series_description', ''),
+                    'posts': []
+                }
+            series_dict[series_key]['posts'].append(post)
+    
+    # Sort posts within each series by series_order
+    for series in series_dict.values():
+        series['posts'].sort(key=lambda x: x.get('series_order', 999))
+        series['total_posts'] = len(series['posts'])
+    
+    return series_dict
+
+def get_series_navigation(current_post):
+    """Get navigation for current post if it's part of a series"""
+    if not current_post.get('series'):
+        return None
+    
+    series_data = get_series_data()
+    series = series_data.get(current_post['series'])
+    
+    if not series:
+        return None
+    
+    current_index = None
+    for i, post in enumerate(series['posts']):
+        if post['slug'] == current_post['slug']:
+            current_index = i
+            break
+    
+    if current_index is None:
+        return None
+    
+    # Calculate progress percentage
+    current_order = current_post.get('series_order', 1)
+    progress_percentage = round((current_order / series['total_posts']) * 100, 1)
+    
+    nav_data = {
+        'series': series,
+        'current_order': current_order,
+        'total_posts': series['total_posts'],
+        'progress_percentage': progress_percentage,
+        'previous': series['posts'][current_index - 1] if current_index > 0 else None,
+        'next': series['posts'][current_index + 1] if current_index < len(series['posts']) - 1 else None
+    }
+    
+    return nav_data
+
 
 def create_slug(title):
     """Create URL-friendly slug from title"""
@@ -189,24 +297,60 @@ Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 @app.route('/blog')
 def blog():
-    """Display all published blog posts"""
+    """Display all published blog posts with series organization"""
     posts = load_blog_posts()
+    series_data = get_series_data()
+    
     # Filter published posts and sort by date (newest first)
     published_posts = [post for post in posts if post['published']]
     published_posts.sort(key=lambda x: x['date'], reverse=True)
     
-    return render_template('blog.html', posts=published_posts, data=PORTFOLIO_DATA)
+    # Separate series posts from standalone posts
+    standalone_posts = [post for post in published_posts if not post.get('series')]
+    
+    return render_template('blog.html', 
+                         posts=standalone_posts, 
+                         series_data=series_data,
+                         data=PORTFOLIO_DATA)
 
 @app.route('/blog/<slug>')
 def blog_post(slug):
-    """Display individual blog post"""
+    """Display individual blog post with series navigation"""
     posts = load_blog_posts()
     post = next((p for p in posts if p['slug'] == slug), None)
     
     if not post or not post['published']:
         abort(404)
     
-    return render_template('blog_post.html', post=post, data=PORTFOLIO_DATA)
+    # Get series navigation if this post is part of a series
+    series_nav = get_series_navigation(post)
+    
+    return render_template('blog_post.html', 
+                         post=post, 
+                         series_nav=series_nav,
+                         data=PORTFOLIO_DATA)
+
+@app.route('/blog/series/<series_key>')
+def blog_series(series_key):
+    """Display all posts in a specific series"""
+    series_data = get_series_data()
+    series = series_data.get(series_key)
+    
+    if not series:
+        abort(404)
+    
+    return render_template('blog_series.html', 
+                         series=series,
+                         data=PORTFOLIO_DATA)
+
+@app.route('/blog/series')
+def blog_series_index():
+    """Display all available series"""
+    series_data = get_series_data()
+    
+    return render_template('blog_series_index.html', 
+                         series_data=series_data,
+                         data=PORTFOLIO_DATA)
 
 @app.route('/blog/feed.xml')
 def blog_feed():
