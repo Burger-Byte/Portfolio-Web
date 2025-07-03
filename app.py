@@ -8,6 +8,10 @@ import frontmatter
 import markdown
 from flask_mail import Mail, Message
 import requests
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+import time
+import threading
+import psutil
 
 app = Flask(__name__)
 
@@ -25,6 +29,12 @@ mail = Mail(app)
 
 BLOG_DIR = Path('blog_posts')
 BLOG_DIR.mkdir(exist_ok=True)
+
+REQUEST_COUNT = Counter('flask_http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status_code'])
+REQUEST_DURATION = Histogram('flask_http_request_duration_seconds', 'HTTP request duration', ['method', 'endpoint'])
+ACTIVE_REQUESTS = Gauge('flask_http_requests_active', 'Active HTTP requests')
+CPU_USAGE = Gauge('system_cpu_usage_percent', 'CPU usage percentage')
+MEMORY_USAGE = Gauge('system_memory_usage_percent', 'Memory usage percentage')
 
 PORTFOLIO_DATA = {
     'personal_info': {
@@ -204,12 +214,57 @@ def create_slug(title):
     slug = re.sub(r'[-\s]+', '-', slug)
     return slug.strip('-')
 
+def update_system_metrics():
+    while True:
+        try:
+            CPU_USAGE.set(psutil.cpu_percent(interval=1))
+            MEMORY_USAGE.set(psutil.virtual_memory().percent)
+        except Exception as e:
+            print(f"Error updating metrics: {e}")
+        time.sleep(30)
+
+# START METRICS THREAD
+metrics_thread = threading.Thread(target=update_system_metrics, daemon=True)
+metrics_thread.start()
 
 @app.before_request
 def force_https():
     """Redirect HTTP requests to HTTPS in production"""
+    request.start_time = time.time()
+    ACTIVE_REQUESTS.inc()
     if not request.is_secure and os.getenv('FLASK_ENV') == 'production':
         return redirect(request.url.replace('http://', 'https://'), code=301)
+
+@app.after_request
+def after_request(response):
+    """Track request completion and update metrics"""
+    try:
+        # Calculate request duration
+        request_duration = time.time() - request.start_time
+        
+        # Update metrics
+        REQUEST_COUNT.labels(
+            method=request.method,
+            endpoint=request.endpoint or 'unknown',
+            status_code=response.status_code
+        ).inc()
+        
+        REQUEST_DURATION.labels(
+            method=request.method,
+            endpoint=request.endpoint or 'unknown'
+        ).observe(request_duration)
+        
+        ACTIVE_REQUESTS.dec()
+        
+    except Exception as e:
+        print(f"Error in after_request: {e}")
+    
+    return response
+
+@app.route('/metrics')
+def metrics():
+    """Prometheus metrics endpoint"""
+    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 @app.route('/')
 def home():
