@@ -1,0 +1,586 @@
+{% extends "portfolio_base.html" %}
+
+{% block title %}Developer Tools - {{ data.personal_info.name }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Override any existing styles with specific selectors */
+    .developer-tools-page {
+        font-family: 'Inter', sans-serif !important;
+        background: #1a1a1a !important;
+        min-height: 100vh !important;
+        padding: 80px 20px 40px 20px !important;
+        color: #ffffff !important;
+        margin-top: 0 !important;
+    }
+
+    .developer-tools-page * {
+        box-sizing: border-box;
+    }
+
+    .tools-container {
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+    }
+
+    .tools-header {
+        text-align: center !important;
+        margin-bottom: 50px !important;
+        color: #ffffff !important;
+        padding-top: 20px !important;
+    }
+
+    .tools-header h1 {
+        font-size: 2.5rem !important;
+        margin-bottom: 10px !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, #6b7280, #9ca3af) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+    }
+
+    .tools-header p {
+        font-size: 1.1rem !important;
+        color: #9ca3af !important;
+        max-width: 600px !important;
+        margin: 0 auto !important;
+        line-height: 1.6 !important;
+    }
+
+    .search-bar {
+        margin-bottom: 30px !important;
+        text-align: center !important;
+    }
+
+    .search-input {
+        width: 100% !important;
+        max-width: 500px !important;
+        padding: 12px 20px !important;
+        font-size: 1rem !important;
+        border: 1px solid #374151 !important;
+        border-radius: 10px !important;
+        background: #2a2a2a !important;
+        outline: none !important;
+        transition: all 0.3s ease !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+    }
+
+    .search-input:focus {
+        border-color: #6b7280 !important;
+        box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25) !important;
+    }
+
+    .search-input::placeholder {
+        color: #9ca3af !important;
+    }
+
+    .category {
+        margin-bottom: 50px !important;
+    }
+
+    .category-title {
+        color: #ffffff !important;
+        font-size: 1.6rem !important;
+        margin-bottom: 20px !important;
+        font-weight: 600 !important;
+        border-bottom: 1px solid #374151 !important;
+        padding-bottom: 8px !important;
+    }
+
+    .tools-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+        gap: 20px !important;
+    }
+
+    .tool-tile {
+        background: #2a2a2a !important;
+        border-radius: 20px !important;
+        padding: 24px !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid #374151 !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+        overflow: hidden !important;
+    }
+
+    .tool-tile:hover {
+        transform: translateY(-10px) !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+        border-color: #6b7280 !important;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+
+    .tool-header {
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 16px !important;
+    }
+
+    .tool-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 12px !important;
+        margin-right: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 24px !important;
+        font-weight: bold !important;
+        color: white !important;
+        flex-shrink: 0 !important;
+    }
+
+    .tool-title {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin-bottom: 4px !important;
+    }
+
+    .tool-author {
+        font-size: 0.9rem !important;
+        color: #9ca3af !important;
+    }
+
+    .tool-description {
+        color: #9ca3af !important;
+        line-height: 1.6 !important;
+        margin-bottom: 16px !important;
+    }
+
+    .tool-stats {
+        display: flex !important;
+        gap: 16px !important;
+        font-size: 0.9rem !important;
+        color: #9ca3af !important;
+    }
+
+    .stat {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .star-icon::before { content: "⭐"; }
+    .fork-icon::before { content: "🔀"; }
+    .lang-icon::before { content: "💻"; }
+
+    .hidden {
+        display: none !important;
+    }
+
+    @media (max-width: 768px) {
+        .developer-tools-page {
+            padding: 80px 10px 20px 10px !important;
+        }
+        
+        .tools-header h1 {
+            font-size: 2rem !important;
+        }
+        
+        .tools-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .tool-tile {
+            padding: 20px !important;
+        }
+    }
+</style>
+
+<div class="developer-tools-page">
+    <div class="tools-container">
+        <div class="tools-header">
+            <h1>🛠️ Developer Tools Hub</h1>
+            <p>Curated collection of essential GitHub repositories and resources for developers</p>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search tools and resources..." id="searchInput">
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">📚 Learning & Education</h2>
+            <div class="tools-grid">
+                <a href="https://github.com/kamranahmedse/developer-roadmap" target="_blank" class="tool-tile" data-searchable="roadmap developer learning path career frontend backend devops">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">🗺️</div>
+                        <div>
+                            <div class="tool-title">Developer Roadmap</div>
+                            <div class="tool-author">kamranahmedse</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Interactive roadmaps, guides and other educational content to help developers grow in their careers.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 295k</div>
+                        <div class="stat"><span class="fork-icon"></span> 39k</div>
+                        <div class="stat"><span class="lang-icon"></span> TypeScript</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/ossu/computer-science" target="_blank" class="tool-tile" data-searchable="computer science curriculum education free university ossu">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #3b82f6, #1e40af);">🎓</div>
+                        <div>
+                            <div class="tool-title">Computer Science</div>
+                            <div class="tool-author">ossu</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Complete computer science education using online materials. A comprehensive path to free self-taught education.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 171k</div>
+                        <div class="stat"><span class="fork-icon"></span> 21k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/EbookFoundation/free-programming-books" target="_blank" class="tool-tile" data-searchable="free programming books ebooks learning resources education">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #10b981, #059669);">📖</div>
+                        <div>
+                            <div class="tool-title">Free Programming Books</div>
+                            <div class="tool-author">EbookFoundation</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Freely available programming books. A massive collection of free books on every programming language.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 335k</div>
+                        <div class="stat"><span class="fork-icon"></span> 61k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/sdmg15/Best-websites-a-programmer-should-visit" target="_blank" class="tool-tile" data-searchable="best websites programmer should visit resources learning">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🌐</div>
+                        <div>
+                            <div class="tool-title">Best Websites for Programmers</div>
+                            <div class="tool-author">sdmg15</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Curated list of the best websites a programmer should visit. Essential resources for every developer.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 62k</div>
+                        <div class="stat"><span class="fork-icon"></span> 8k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">⚡ Algorithms & System Design</h2>
+            <div class="tools-grid">
+                <a href="https://github.com/TheAlgorithms" target="_blank" class="tool-tile" data-searchable="algorithms implementations data structures computer science python java">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">🧮</div>
+                        <div>
+                            <div class="tool-title">The Algorithms</div>
+                            <div class="tool-author">TheAlgorithms</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Open source algorithm implementations in multiple programming languages. Learn algorithms by example.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 185k</div>
+                        <div class="stat"><span class="fork-icon"></span> 45k</div>
+                        <div class="stat"><span class="lang-icon"></span> Python</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/donnemartin/system-design-primer" target="_blank" class="tool-tile" data-searchable="system design primer scalability architecture interview preparation">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #0891b2, #0e7490);">🏗️</div>
+                        <div>
+                            <div class="tool-title">System Design Primer</div>
+                            <div class="tool-author">donnemartin</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Learn how to design large-scale systems. Prep for system design interview questions with examples.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 272k</div>
+                        <div class="stat"><span class="fork-icon"></span> 46k</div>
+                        <div class="stat"><span class="lang-icon"></span> Python</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/codecrafters-io/build-your-own-x" target="_blank" class="tool-tile" data-searchable="build your own tutorial projects learning hands-on database git docker">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🔨</div>
+                        <div>
+                            <div class="tool-title">Build Your Own X</div>
+                            <div class="tool-author">codecrafters-io</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Master programming by recreating your favorite technologies from scratch. Build databases, git, docker, and more.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 304k</div>
+                        <div class="stat"><span class="fork-icon"></span> 28k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">🔧 Resources & Collections</h2>
+            <div class="tools-grid">
+                <a href="https://github.com/sindresorhus/awesome" target="_blank" class="tool-tile" data-searchable="awesome lists curated resources collections programming">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">⭐</div>
+                        <div>
+                            <div class="tool-title">Awesome Lists</div>
+                            <div class="tool-author">sindresorhus</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Awesome lists about all kinds of interesting topics. The ultimate collection of curated resources.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 323k</div>
+                        <div class="stat"><span class="fork-icon"></span> 27k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/public-apis/public-apis" target="_blank" class="tool-tile" data-searchable="public apis free rest api collection development">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🌐</div>
+                        <div>
+                            <div class="tool-title">Public APIs</div>
+                            <div class="tool-author">public-apis</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        A collective list of free APIs for use in software and web development. Perfect for project ideas.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 315k</div>
+                        <div class="stat"><span class="fork-icon"></span> 33k</div>
+                        <div class="stat"><span class="lang-icon"></span> Python</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/ripienaar/free-for-dev" target="_blank" class="tool-tile" data-searchable="free for developers tools services saas hosting cloud">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #10b981, #059669);">💰</div>
+                        <div>
+                            <div class="tool-title">Free For Dev</div>
+                            <div class="tool-author">ripienaar</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        A list of SaaS, PaaS and IaaS offerings that have free tiers of interest to devops and infradev.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 89k</div>
+                        <div class="stat"><span class="fork-icon"></span> 10k</div>
+                        <div class="stat"><span class="lang-icon"></span> HTML</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/btw-so/open-source-alternatives" target="_blank" class="tool-tile" data-searchable="open source alternatives software free replacement saas">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #84cc16, #65a30d);">🔓</div>
+                        <div>
+                            <div class="tool-title">Open Source Alternatives</div>
+                            <div class="tool-author">btw-so</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Curated list of open source alternatives to popular software. Save money with free alternatives.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 21k</div>
+                        <div class="stat"><span class="fork-icon"></span> 1k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">🤖 Machine Learning & AI</h2>
+            <div class="tools-grid">
+                <a href="https://github.com/rasbt/LLMs-from-scratch" target="_blank" class="tool-tile" data-searchable="llm large language models from scratch ai machine learning">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">🧠</div>
+                        <div>
+                            <div class="tool-title">LLMs from Scratch</div>
+                            <div class="tool-author">rasbt</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Implementing a ChatGPT-like LLM from scratch, step by step. Learn how LLMs work under the hood.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 29k</div>
+                        <div class="stat"><span class="fork-icon"></span> 3k</div>
+                        <div class="stat"><span class="lang-icon"></span> Jupyter Notebook</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/eriklindernoren/ML-From-Scratch" target="_blank" class="tool-tile" data-searchable="machine learning from scratch algorithms python implementation">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">🔬</div>
+                        <div>
+                            <div class="tool-title">ML From Scratch</div>
+                            <div class="tool-author">eriklindernoren</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Machine Learning algorithms implemented from scratch with educational focus. NumPy only implementations.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 24k</div>
+                        <div class="stat"><span class="fork-icon"></span> 4k</div>
+                        <div class="stat"><span class="lang-icon"></span> Python</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/GokuMohandas/Made-With-ML" target="_blank" class="tool-tile" data-searchable="made with ml machine learning projects mlops production">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🚀</div>
+                        <div>
+                            <div class="tool-title">Made With ML</div>
+                            <div class="tool-author">GokuMohandas</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Learn how to design, develop, and deploy machine learning applications. MLOps and production focus.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 37k</div>
+                        <div class="stat"><span class="fork-icon"></span> 6k</div>
+                        <div class="stat"><span class="lang-icon"></span> Jupyter Notebook</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2 class="category-title">📰 Industry & Research</h2>
+            <div class="tools-grid">
+                <a href="https://github.com/kilimchoi/engineering-blogs" target="_blank" class="tool-tile" data-searchable="engineering blogs tech companies industry insights">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #64748b, #475569);">📰</div>
+                        <div>
+                            <div class="tool-title">Engineering Blogs</div>
+                            <div class="tool-author">kilimchoi</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        A curated list of engineering blogs from top tech companies. Learn from industry leaders.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 31k</div>
+                        <div class="stat"><span class="fork-icon"></span> 2k</div>
+                        <div class="stat"><span class="lang-icon"></span> -</div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/papers-we-love/papers-we-love" target="_blank" class="tool-tile" data-searchable="papers we love computer science research academic papers">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">📄</div>
+                        <div>
+                            <div class="tool-title">Papers We Love</div>
+                            <div class="tool-author">papers-we-love</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        Papers from the computer science community to read and discuss. Academic research made accessible.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> 87k</div>
+                        <div class="stat"><span class="fork-icon"></span> 5k</div>
+                        <div class="stat"><span class="lang-icon"></span> Shell</div>
+                    </div>
+                </a>
+
+                <a href="https://www.coderabbit.ai" target="_blank" class="tool-tile" data-searchable="coderabbit ai code review tool github pull request">
+                    <div class="tool-header">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🐰</div>
+                        <div>
+                            <div class="tool-title">CodeRabbit</div>
+                            <div class="tool-author">CodeRabbit AI</div>
+                        </div>
+                    </div>
+                    <div class="tool-description">
+                        AI-powered code review assistant. Get instant, intelligent feedback on your pull requests and improve code quality.
+                    </div>
+                    <div class="tool-stats">
+                        <div class="stat"><span class="star-icon"></span> AI Tool</div>
+                        <div class="stat"><span class="fork-icon"></span> Free Tier</div>
+                        <div class="stat"><span class="lang-icon"></span> Web App</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const toolTiles = document.querySelectorAll('.tool-tile');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        toolTiles.forEach(tile => {
+            const searchableText = tile.getAttribute('data-searchable').toLowerCase();
+            const title = tile.querySelector('.tool-title').textContent.toLowerCase();
+            const description = tile.querySelector('.tool-description').textContent.toLowerCase();
+            
+            if (searchableText.includes(searchTerm) || 
+                title.includes(searchTerm) || 
+                description.includes(searchTerm)) {
+                tile.style.display = 'block';
+            } else {
+                tile.style.display = 'none';
+            }
+        });
+
+        // Hide/show categories if all tiles are hidden
+        document.querySelectorAll('.category').forEach(category => {
+            const visibleTiles = category.querySelectorAll('.tool-tile[style="display: block"], .tool-tile:not([style*="display: none"])');
+            if (searchTerm && visibleTiles.length === 0) {
+                category.style.display = 'none';
+            } else {
+                category.style.display = 'block';
+            }
+        });
+    });
+
+    // Add smooth hover animations
+    toolTiles.forEach(tile => {
+        tile.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px) scale(1.01)';
+        });
+        
+        tile.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+</script>
+{% endblock %}

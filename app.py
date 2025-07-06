@@ -275,6 +275,11 @@ def home():
 def about():
     return render_template('portfolio_about.html', data=PORTFOLIO_DATA)
 
+@app.route('/tools')
+def tools():
+    """Display developer tools and resources page"""
+    return render_template('portfolio_tools.html', data=PORTFOLIO_DATA)
+
 
 @app.route('/download-resume')
 def download_resume():
