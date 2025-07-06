@@ -13,3 +13,4 @@ markdown==3.8.2
 python-frontmatter==1.1.0
 prometheus-client==0.22.1
 psutil==7.0.0
+flask-compress==1.17
