@@ -8,23 +8,33 @@ echo "Starting Portfolio Application..."
 echo "Environment: ${FLASK_ENV:-development}"
 
 if [ -f "$SSL_CERT_PATH" ] && [ -f "$SSL_KEY_PATH" ] && [ "$FLASK_ENV" = "production" ]; then
-    echo "SSL certificates found. Starting production servers with SSL..."
+    echo "SSL certificates found. Starting production server with SSL..."
     echo "Certificate: $SSL_CERT_PATH"
     echo "Key: $SSL_KEY_PATH"
     
-    echo "Starting HTTP redirect server on port 80..."
-    python3 -c "
-from flask import Flask, redirect
+    # Create a simple HTTP redirect app file
+    cat > /tmp/redirect_app.py << 'EOF'
+from flask import Flask, redirect, request
+
 app = Flask(__name__)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def redirect_to_https(path):
-    return redirect(f'https://jaquesburger.com/{path}', code=301)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=False)
-" &
+    return redirect(f'https://{request.host.split(":")[0]}/{path}', code=301)
+EOF
+    
+    echo "Starting HTTP redirect server on port 80..."
+    # Use gunicorn for the redirect server too
+    gunicorn \
+        --bind 0.0.0.0:80 \
+        --workers 1 \
+        --daemon \
+        --access-logfile /app/logs/redirect-access.log \
+        --error-logfile /app/logs/redirect-error.log \
+        --pid /tmp/redirect.pid \
+        redirect_app:app \
+        --chdir /tmp
     
     echo "Starting HTTPS server on port 443 with SSL..."
     exec gunicorn \
