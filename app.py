@@ -63,33 +63,27 @@ def load_blog_posts():
         os.makedirs(blog_dir, exist_ok=True)
         return posts
     
-    # Function to process a markdown file
     def process_markdown_file(filepath, relative_path):
         with open(filepath, 'r', encoding='utf-8') as file:
             content = file.read()
             
-            # Parse frontmatter
             if content.startswith('---'):
                 parts = content.split('---', 2)
                 if len(parts) >= 3:
                     frontmatter = parts[1].strip()
                     post_content = parts[2].strip()
                     
-                    # Parse YAML frontmatter
                     import yaml
                     from datetime import datetime
                     metadata = yaml.safe_load(frontmatter)
                     
-                    # Handle date parsing
                     post_date = metadata.get('date')
                     if post_date:
                         if isinstance(post_date, str):
                             try:
-                                # Try to parse string date
                                 post_date = datetime.strptime(post_date, '%Y-%m-%d')
                             except ValueError:
                                 try:
-                                    # Try alternative format
                                     post_date = datetime.strptime(post_date, '%Y-%m-%d %H:%M:%S')
                                 except ValueError:
                                     print(f"Warning: Invalid date format in {relative_path}: {post_date}")
@@ -99,11 +93,9 @@ def load_blog_posts():
                     else:
                         post_date = datetime.now()
                     
-                    # Convert markdown to HTML
                     import markdown
                     html_content = markdown.markdown(post_content, extensions=['codehilite', 'fenced_code'])
                     
-                    # Get filename without extension for default slug
                     filename = os.path.basename(filepath)
                     default_slug = filename[:-3] if filename.endswith('.md') else filename
                     
@@ -117,18 +109,15 @@ def load_blog_posts():
                         'content': post_content,
                         'content_html': html_content,
                         'slug': metadata.get('slug', default_slug),
-                        # Series fields
                         'series': metadata.get('series'),
                         'series_title': metadata.get('series_title'),
                         'series_order': metadata.get('series_order'),
                         'series_description': metadata.get('series_description'),
-                        # Track file location
                         'file_path': relative_path
                     }
                     return post
         return None
     
-    # Walk through blog_posts directory and all subdirectories
     for root, dirs, files in os.walk(blog_dir):
         for filename in files:
             if filename.endswith('.md'):
@@ -141,7 +130,6 @@ def load_blog_posts():
     
     return posts
 
-# Also update the constants at the top of your file:
 BLOG_DIR = Path('blog_posts')
 BLOG_DIR.mkdir(exist_ok=True)
 
@@ -165,7 +153,6 @@ def get_series_data():
                 }
             series_dict[series_key]['posts'].append(post)
     
-    # Sort posts within each series by series_order
     for series in series_dict.values():
         series['posts'].sort(key=lambda x: x.get('series_order', 999))
         series['total_posts'] = len(series['posts'])
@@ -192,7 +179,6 @@ def get_series_navigation(current_post):
     if current_index is None:
         return None
     
-    # Calculate progress percentage
     current_order = current_post.get('series_order', 1)
     progress_percentage = round((current_order / series['total_posts']) * 100, 1)
     
@@ -223,26 +209,21 @@ def update_system_metrics():
             print(f"Error updating metrics: {e}")
         time.sleep(30)
 
-# START METRICS THREAD
 metrics_thread = threading.Thread(target=update_system_metrics, daemon=True)
 metrics_thread.start()
 
 @app.before_request
-def force_https():
-    """Redirect HTTP requests to HTTPS in production"""
+def before_request():
+    """Track request start time and active requests"""
     request.start_time = time.time()
     ACTIVE_REQUESTS.inc()
-    if not request.is_secure and os.getenv('FLASK_ENV') == 'production':
-        return redirect(request.url.replace('http://', 'https://'), code=301)
 
 @app.after_request
 def after_request(response):
     """Track request completion and update metrics"""
     try:
-        # Calculate request duration
         request_duration = time.time() - request.start_time
         
-        # Update metrics
         REQUEST_COUNT.labels(
             method=request.method,
             endpoint=request.endpoint or 'unknown',
@@ -361,11 +342,9 @@ def blog():
     posts = load_blog_posts()
     series_data = get_series_data()
     
-    # Filter published posts and sort by date (newest first)
     published_posts = [post for post in posts if post['published']]
     published_posts.sort(key=lambda x: x['date'], reverse=True)
     
-    # Separate series posts from standalone posts
     standalone_posts = [post for post in published_posts if not post.get('series')]
     
     return render_template('blog.html', 
@@ -382,7 +361,6 @@ def blog_post(slug):
     if not post or not post['published']:
         abort(404)
     
-    # Get series navigation if this post is part of a series
     series_nav = get_series_navigation(post)
     
     return render_template('blog_post.html', 
@@ -424,53 +402,10 @@ def blog_feed():
                          data=PORTFOLIO_DATA), 200, {'Content-Type': 'application/xml'}
 
 
-def create_http_app():
-    """Create a simple HTTP app that redirects to HTTPS"""
-    from flask import Flask, redirect, request
-    
-    http_app = Flask(__name__)
-    
-    @http_app.route('/', defaults={'path': ''})
-    @http_app.route('/<path:path>')
-    def redirect_to_https(path):
-        return redirect(f'https://{request.host}/{path}', code=301)
-    
-    return http_app
-
-def run_http_server():
-    """Run HTTP server for redirects"""
-    http_app = create_http_app()
-    http_app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
-
-def run_https_server():
-    """Run HTTPS server with SSL certificates"""
-    cert_path = os.getenv('SSL_CERT_PATH')
-    key_path = os.getenv('SSL_KEY_PATH')
-    
-    if cert_path and key_path and os.path.exists(cert_path) and os.path.exists(key_path):
-        context = (cert_path, key_path)
-        app.run(host='0.0.0.0', port=443, ssl_context=context, debug=False, use_reloader=False)
-    else:
-        print("SSL certificates not found, running HTTP only")
-        app.run(host='0.0.0.0', port=80, debug=False)
 
 if __name__ == '__main__':
-    cert_path = os.getenv('SSL_CERT_PATH')
-    key_path = os.getenv('SSL_KEY_PATH')
-    is_production = os.getenv('FLASK_ENV') == 'production'
-    
-    if is_production and cert_path and key_path and os.path.exists(cert_path) and os.path.exists(key_path):
-        print("Starting production server with SSL...")
-        print(f"SSL Certificate: {cert_path}")
-        print(f"SSL Key: {key_path}")
-        
-        http_thread = threading.Thread(target=run_http_server, daemon=True)
-        http_thread.start()
-        print("HTTP redirect server started on port 80")
-        
-        print("Starting HTTPS server on port 443")
-        run_https_server()
-        
-    else:
-        print("Starting development server...")
-        app.run(host='0.0.0.0', port=80, debug=True)
+    print("Starting Flask development server...")
+    print("Note: This should only be used for local development!")
+    print("Production deployments should use Gunicorn behind Nginx")
+
+    app.run(host='0.0.0.0', port=5000, debug=True)

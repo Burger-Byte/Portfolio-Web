@@ -42,9 +42,9 @@ jobs:
         sudo mkdir -p /opt/portfolio
         sudo chown $USER:$USER /opt/portfolio
     
-    - name: Copy docker-compose file and configs
+    - name: Copy all configuration files
       run: |
-        # Look for docker-compose file with either .yml or .yaml extension
+        # Copy docker-compose file
         if [ -f "docker-compose.yml" ]; then
           cp docker-compose.yml /opt/portfolio/
           echo "✅ Copied docker-compose.yml"
@@ -52,19 +52,38 @@ jobs:
           cp docker-compose.yaml /opt/portfolio/docker-compose.yml
           echo "✅ Copied docker-compose.yaml as docker-compose.yml"
         else
-          echo "❌ Neither docker-compose.yml nor docker-compose.yaml found in $(pwd)"
-          echo "Available files:"
-          ls -la
+          echo "❌ Neither docker-compose.yml nor docker-compose.yaml found"
           exit 1
         fi
         
-        # Copy any other config files if they exist
+        # Copy nginx configuration files
+        if [ -f "nginx.conf" ]; then
+          cp nginx.conf /opt/portfolio/
+          echo "✅ Copied nginx.conf"
+        else
+          echo "❌ nginx.conf not found"
+          exit 1
+        fi
+        
+        if [ -f "nginx-site.conf" ]; then
+          cp nginx-site.conf /opt/portfolio/
+          echo "✅ Copied nginx-site.conf"
+        else
+          echo "❌ nginx-site.conf not found"
+          exit 1
+        fi
+        
+        # Copy other config files if they exist
         [ -f ".env.example" ] && cp .env.example /opt/portfolio/ || true
         [ -f "entrypoint.sh" ] && cp entrypoint.sh /opt/portfolio/ || true
+        
+        echo "📁 Files in /opt/portfolio:"
+        ls -la /opt/portfolio/
     
-    - name: Pull latest Docker image
+    - name: Pull Docker images
       run: |
         docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+        docker pull nginx:alpine
     
     - name: Deploy with Docker Compose
       run: |
@@ -82,25 +101,61 @@ jobs:
         # Stop existing containers
         docker-compose down || true
         
+        # Remove old containers to ensure clean state
+        docker rm -f nginx_proxy portfolio_web || true
+        
         # Start new containers
         docker-compose up -d
+        
+        # Show initial logs
+        sleep 5
+        echo "🔍 Container status:"
+        docker ps
+        echo "📋 Initial logs:"
+        docker-compose logs --tail=20
         
         # Clean up old images
         docker image prune -f
     
     - name: Health check
       run: |
+        # Wait for services to fully start
+        echo "⏳ Waiting for services to start..."
         sleep 30
-        # Try HTTPS first, then HTTP, then port 5000 for fallback
-        if curl -f https://jaquesburger.com/health; then
-          echo "✅ HTTPS Deployment successful!"
-        elif curl -f http://jaquesburger.com/health; then
-          echo "✅ HTTP Deployment successful!"
-        elif curl -f http://localhost:5000/health; then
-          echo "✅ Development mode deployment successful!"
+        
+        # Function to check health
+        check_health() {
+          local url=$1
+          local name=$2
+          echo "Checking $name..."
+          if curl -f -k -m 10 "$url" > /dev/null 2>&1; then
+            echo "✅ $name is responding!"
+            return 0
+          else
+            echo "❌ $name is not responding"
+            return 1
+          fi
+        }
+        
+        # Check HTTPS (primary)
+        if check_health "https://jaquesburger.com/" "HTTPS endpoint"; then
+          echo "✅ Deployment successful!"
+          echo "🔒 SSL is working correctly"
+        elif check_health "http://jaquesburger.com/" "HTTP endpoint"; then
+          echo "⚠️ HTTP is working but HTTPS redirect may have issues"
+          docker-compose logs nginx --tail=50
         else
-          echo "❌ Deployment failed!"
-          cd /opt/portfolio
-          docker-compose logs portfolio-app
+          echo "❌ Both HTTP and HTTPS checks failed!"
+          echo "📋 Container status:"
+          docker ps -a
+          echo "📋 Nginx logs:"
+          docker-compose logs nginx --tail=50
+          echo "📋 App logs:"
+          docker-compose logs portfolio-app --tail=50
+          
+          # Test internal connectivity
+          echo "🔍 Testing internal connectivity:"
+          docker exec nginx_proxy sh -c "apk add --no-cache curl && curl -I http://portfolio-app:5000/" || echo "Internal connection failed"
+          
           exit 1
         fi
