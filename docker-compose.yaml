@@ -1,18 +1,32 @@
 version: '3.3'
 
 services:
-  portfolio-app:
-    image: ${DOCKER_USERNAME}/portfolio:latest
-    container_name: portfolio_web
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
     ports:
       - "80:80"
       - "443:443"
-      - "5000:5000"  # Added for health check fallback
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-site.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      - portfolio-app
+    restart: unless-stopped
+    networks:
+      - portfolio_network
+
+  portfolio-app:
+    image: ${DOCKER_USERNAME}/portfolio:latest
+    container_name: portfolio_web
+    expose:
+      - "5000"  # Internal only, not published
     restart: unless-stopped
     volumes:
       - /secure/portfolio/resume:/app/static/secure:ro
       - /var/log/portfolio:/app/logs
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=false
@@ -23,16 +37,8 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
-      - SSL_CERT_PATH=/etc/letsencrypt/live/jaquesburger.com/fullchain.pem
-      - SSL_KEY_PATH=/etc/letsencrypt/live/jaquesburger.com/privkey.pem
     networks:
       - portfolio_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:443/health", "--insecure"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
 networks:
   portfolio_network:
