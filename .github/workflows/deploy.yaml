@@ -10,16 +10,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
+
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
@@ -36,59 +36,29 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Create application directory
       run: |
         sudo mkdir -p /opt/portfolio
         sudo chown $USER:$USER /opt/portfolio
-    
+
     - name: Copy all configuration files
       run: |
-        # Copy docker-compose file
-        if [ -f "docker-compose.yml" ]; then
-          cp docker-compose.yml /opt/portfolio/
-          echo "✅ Copied docker-compose.yml"
-        elif [ -f "docker-compose.yaml" ]; then
-          cp docker-compose.yaml /opt/portfolio/docker-compose.yml
-          echo "✅ Copied docker-compose.yaml as docker-compose.yml"
-        else
-          echo "❌ Neither docker-compose.yml nor docker-compose.yaml found"
-          exit 1
-        fi
-        
-        # Copy nginx configuration files
-        if [ -f "nginx.conf" ]; then
-          cp nginx.conf /opt/portfolio/
-          echo "✅ Copied nginx.conf"
-        else
-          echo "❌ nginx.conf not found"
-          exit 1
-        fi
-        
-        if [ -f "nginx-site.conf" ]; then
-          cp nginx-site.conf /opt/portfolio/
-          echo "✅ Copied nginx-site.conf"
-        else
-          echo "❌ nginx-site.conf not found"
-          exit 1
-        fi
-        
-        # Copy other config files if they exist
-        [ -f ".env.example" ] && cp .env.example /opt/portfolio/ || true
-        [ -f "entrypoint.sh" ] && cp entrypoint.sh /opt/portfolio/ || true
-        
-        echo "📁 Files in /opt/portfolio:"
-        ls -la /opt/portfolio/
-    
+        cp "$GITHUB_WORKSPACE/docker-compose.yaml" /opt/portfolio/docker-compose.yml
+        cp "$GITHUB_WORKSPACE/nginx.conf" /opt/portfolio/
+        cp "$GITHUB_WORKSPACE/nginx-site.conf" /opt/portfolio/
+        [ -f "$GITHUB_WORKSPACE/.env.example" ] && cp "$GITHUB_WORKSPACE/.env.example" /opt/portfolio/ || true
+        [ -f "$GITHUB_WORKSPACE/entrypoint.sh" ] && cp "$GITHUB_WORKSPACE/entrypoint.sh" /opt/portfolio/ || true
+
     - name: Pull Docker images
       run: |
         docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
         docker pull nginx:alpine
-    
+
     - name: Deploy with Docker Compose
       run: |
         cd /opt/portfolio
-        
+
         # Create .env file with secrets
         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
         echo "IMAGE_TAG=latest" >> .env
@@ -97,33 +67,30 @@ jobs:
         echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
         echo "RECAPTCHA_SITE_KEY=${{ secrets.RECAPTCHA_SITE_KEY }}" >> .env
         echo "RECAPTCHA_SECRET_KEY=${{ secrets.RECAPTCHA_SECRET_KEY }}" >> .env
-        
-        # Stop existing containers
+
+        # Stop and remove existing containers
         docker-compose down || true
-        
-        # Remove old containers to ensure clean state
         docker rm -f nginx_proxy portfolio_web || true
-        
+
         # Start new containers
         docker-compose up -d
-        
+
         # Show initial logs
         sleep 5
         echo "🔍 Container status:"
         docker ps
         echo "📋 Initial logs:"
         docker-compose logs --tail=20
-        
+
         # Clean up old images
         docker image prune -f
-    
+
     - name: Health check
       run: |
-        # Wait for services to fully start
+        cd /opt/portfolio
         echo "⏳ Waiting for services to start..."
         sleep 30
-        
-        # Function to check health
+
         check_health() {
           local url=$1
           local name=$2
@@ -136,8 +103,7 @@ jobs:
             return 1
           fi
         }
-        
-        # Check HTTPS (primary)
+
         if check_health "https://jaquesburger.com/" "HTTPS endpoint"; then
           echo "✅ Deployment successful!"
           echo "🔒 SSL is working correctly"
@@ -152,10 +118,9 @@ jobs:
           docker-compose logs nginx --tail=50
           echo "📋 App logs:"
           docker-compose logs portfolio-app --tail=50
-          
-          # Test internal connectivity
+
           echo "🔍 Testing internal connectivity:"
           docker exec nginx_proxy sh -c "apk add --no-cache curl && curl -I http://portfolio-app:5000/" || echo "Internal connection failed"
-          
+
           exit 1
         fi
