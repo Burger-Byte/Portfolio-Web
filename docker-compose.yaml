@@ -37,6 +37,8 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - BLOG_PIPELINE_ENABLED=true
+      - BLOG_DEPLOY_SECRET=${BLOG_DEPLOY_SECRET}
     networks:
       - portfolio_network
 
