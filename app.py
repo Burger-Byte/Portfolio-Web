@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory
 from datetime import datetime
 import os
 import threading
@@ -12,6 +12,10 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 import time
 import threading
 import psutil
+import json
+import zipfile
+import tempfile
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -29,6 +33,22 @@ mail = Mail(app)
 
 BLOG_DIR = Path('blog_posts')
 BLOG_DIR.mkdir(exist_ok=True)
+SERIES_DIR = Path('series')
+SERIES_DIR.mkdir(exist_ok=True)
+
+BLOG_PIPELINE_CONFIG = {
+    'enabled': os.getenv('BLOG_PIPELINE_ENABLED', 'true').lower() == 'true',
+    'content_dir': '/app/blog-content',
+    'metadata_file': '/app/blog-content/metadata/blog_metadata.json',
+    'portfolio_data_file': '/app/blog-content/metadata/portfolio_integration.json',
+    'secret_key': os.getenv('BLOG_DEPLOY_SECRET', 'change-me-in-production'),
+    'static_blog_dir': '/app/blog-content/blog'
+}
+
+for dir_path in [BLOG_PIPELINE_CONFIG['content_dir'], 
+                 os.path.dirname(BLOG_PIPELINE_CONFIG['metadata_file']),
+                 BLOG_PIPELINE_CONFIG['static_blog_dir']]:
+    os.makedirs(dir_path, exist_ok=True)
 
 REQUEST_COUNT = Counter('flask_http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status_code'])
 REQUEST_DURATION = Histogram('flask_http_request_duration_seconds', 'HTTP request duration', ['method', 'endpoint'])
@@ -40,18 +60,35 @@ PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
         'title': 'Software Engineer',
-        'tagline': 'Creating innovative software solutions with over a decade of experience',
+        'tagline': '🚀 Crafting code like a chef cooks burgers - with passion and a dash of creativity! Growing developer by day, debugging ninja by night.',
         'location': 'Durban, South Africa',
         'linkedin': 'https://www.linkedin.com/in/jaques-b-0519358a/',
         'github': 'https://github.com/Burger-Byte',
-        'website': 'https://jaquesburger.com'
+        'website': 'https://jaquesburger.com',
+        'footerTagline': 'Software Engineer | Developer Advocate | DevOps Enthusiast',
     },
     
     'about': {
         'summary': '''I am a Software Engineer with over a decade of experience in developing 
                      and maintaining enterprise applications. I specialize in creating efficient, 
                      scalable solutions that drive business success and deliver exceptional user experiences.'''
+    },
+    
+    'blog_pipeline': {
+        'enabled': BLOG_PIPELINE_CONFIG['enabled'],
+        'featured_posts': [],
+        'total_posts': 0,
+        'last_updated': None
     }
+}
+
+blog_pipeline_cache = {
+    'posts': [],
+    'featured_posts': [],
+    'recent_posts': [],
+    'stats': {},
+    'last_updated': None,
+    'loaded': False
 }
 
 def load_blog_posts():
@@ -113,7 +150,8 @@ def load_blog_posts():
                         'series_title': metadata.get('series_title'),
                         'series_order': metadata.get('series_order'),
                         'series_description': metadata.get('series_description'),
-                        'file_path': relative_path
+                        'file_path': relative_path,
+                        'source': 'local' 
                     }
                     return post
         return None
@@ -130,15 +168,89 @@ def load_blog_posts():
     
     return posts
 
-BLOG_DIR = Path('blog_posts')
-BLOG_DIR.mkdir(exist_ok=True)
+def load_blog_pipeline_data():
+    """Load blog data from pipeline metadata files"""
+    global blog_pipeline_cache
+    
+    if not BLOG_PIPELINE_CONFIG['enabled']:
+        return
+    
+    try:
+        if os.path.exists(BLOG_PIPELINE_CONFIG['metadata_file']):
+            with open(BLOG_PIPELINE_CONFIG['metadata_file'], 'r') as f:
+                blog_data = json.load(f)
+            
+            blog_pipeline_cache.update({
+                'posts': blog_data.get('posts', []),
+                'featured_posts': blog_data.get('featured_posts', []),
+                'recent_posts': blog_data.get('recent_posts', []),
+                'stats': blog_data.get('stats', {}),
+                'last_updated': blog_data.get('generated_at'),
+                'loaded': True
+            })
+            
+            app.logger.info(f"📚 Loaded {len(blog_pipeline_cache['posts'])} pipeline blog posts")
+        
+        if os.path.exists(BLOG_PIPELINE_CONFIG['portfolio_data_file']):
+            with open(BLOG_PIPELINE_CONFIG['portfolio_data_file'], 'r') as f:
+                portfolio_data = json.load(f)
+            
+            PORTFOLIO_DATA['blog_pipeline'].update({
+                'featured_posts': portfolio_data.get('homepage_featured', [])[:3],
+                'total_posts': len(blog_pipeline_cache['posts']),
+                'last_updated': blog_pipeline_cache['last_updated'],
+                'stats': blog_pipeline_cache['stats']
+            })
+            
+            app.logger.info(f"🎯 Updated portfolio with {len(PORTFOLIO_DATA['blog_pipeline']['featured_posts'])} pipeline featured posts")
+    
+    except Exception as e:
+        app.logger.error(f"⚠️  Error loading pipeline blog data: {e}")
+        blog_pipeline_cache.update({
+            'posts': [],
+            'featured_posts': [],
+            'recent_posts': [],
+            'stats': {},
+            'last_updated': None,
+            'loaded': False
+        })
 
-SERIES_DIR = Path('series')
-SERIES_DIR.mkdir(exist_ok=True)
+def get_all_blog_posts():
+    """Get combined list of local and pipeline blog posts"""
+    local_posts = load_blog_posts()
+    
+    if BLOG_PIPELINE_CONFIG['enabled']:
+        pipeline_posts = []
+        for post_data in blog_pipeline_cache['posts']:
+            pipeline_post = {
+                'title': post_data.get('title', ''),
+                'date': datetime.fromisoformat(post_data.get('date', '').replace('Z', '+00:00')) if post_data.get('date') else datetime.now(),
+                'author': post_data.get('author', 'Jaques Burger'),
+                'published': True,  
+                'tags': post_data.get('tags', []),
+                'excerpt': post_data.get('excerpt', ''),
+                'content': '',  
+                'content_html': '',  
+                'slug': post_data.get('slug', ''),
+                'series': post_data.get('series'),
+                'series_title': post_data.get('series'),
+                'series_order': post_data.get('series_order'),
+                'series_description': '',
+                'file_path': post_data.get('url', ''),
+                'source': 'pipeline',  
+                'url': post_data.get('url', f"/blog/pipeline/{post_data.get('slug', '')}")
+            }
+            pipeline_posts.append(pipeline_post)
+        
+        all_posts = local_posts + pipeline_posts
+    else:
+        all_posts = local_posts
+    
+    return sorted(all_posts, key=lambda x: x['date'], reverse=True)
 
 def get_series_data():
-    """Get organized series data"""
-    posts = load_blog_posts()
+    """Get organized series data from both local and pipeline posts"""
+    posts = get_all_blog_posts()
     series_dict = {}
     
     for post in posts:
@@ -193,12 +305,14 @@ def get_series_navigation(current_post):
     
     return nav_data
 
-
 def create_slug(title):
     """Create URL-friendly slug from title"""
     slug = re.sub(r'[^\w\s-]', '', title.lower())
     slug = re.sub(r'[-\s]+', '-', slug)
     return slug.strip('-')
+
+
+load_blog_pipeline_data()
 
 def update_system_metrics():
     while True:
@@ -249,8 +363,12 @@ def metrics():
 
 @app.route('/')
 def home():
-    return render_template('portfolio_home.html', 
-                         data=PORTFOLIO_DATA)
+    """Enhanced homepage with blog pipeline integration"""
+    featured_pipeline_posts = PORTFOLIO_DATA.get('blog_pipeline', {}).get('featured_posts', [])
+    enhanced_data = PORTFOLIO_DATA.copy()
+    enhanced_data['featured_blog_posts'] = featured_pipeline_posts[:3]
+    
+    return render_template('portfolio_home.html', data=enhanced_data)
 
 @app.route('/about')
 def about():
@@ -261,7 +379,6 @@ def tools():
     """Display developer tools and resources page"""
     return render_template('portfolio_tools.html', data=PORTFOLIO_DATA)
 
-
 @app.route('/download-resume')
 def download_resume():
     flash('Resume download will be available soon!', 'info')
@@ -271,6 +388,25 @@ def download_resume():
 def health_check():
     """Health check endpoint for monitoring"""
     return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
+
+@app.route('/api/blog/health')
+def blog_pipeline_health():
+    """Blog pipeline system health check"""
+    try:
+        health_data = {
+            'status': 'healthy',
+            'pipeline_enabled': BLOG_PIPELINE_CONFIG['enabled'],
+            'local_posts_count': len([p for p in load_blog_posts() if p['published']]),
+            'pipeline_posts_count': len(blog_pipeline_cache['posts']),
+            'total_posts': len([p for p in get_all_blog_posts() if p.get('published', True)]),
+            'last_pipeline_update': blog_pipeline_cache['last_updated'],
+            'content_dir_exists': os.path.exists(BLOG_PIPELINE_CONFIG['content_dir']),
+            'metadata_exists': os.path.exists(BLOG_PIPELINE_CONFIG['metadata_file']),
+            'timestamp': datetime.now().isoformat()
+        }
+        return jsonify(health_data)
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 def verify_recaptcha(recaptcha_response):
     secret_key = app.config['RECAPTCHA_SECRET_KEY']
@@ -335,31 +471,36 @@ Sent at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                          recaptcha_site_key=app.config['RECAPTCHA_SITE_KEY'],
                          data=PORTFOLIO_DATA)
 
-
 @app.route('/blog')
 def blog():
-    """Display all published blog posts with series organization"""
-    posts = load_blog_posts()
+    """Display all published blog posts with series organization (ENHANCED)"""
+    all_posts = get_all_blog_posts()
     series_data = get_series_data()
     
-    published_posts = [post for post in posts if post['published']]
-    published_posts.sort(key=lambda x: x['date'], reverse=True)
-    
+    published_posts = [post for post in all_posts if post.get('published', True)]
     standalone_posts = [post for post in published_posts if not post.get('series')]
+    
+    for post in published_posts:
+        if not hasattr(post, 'source'):
+            post['source'] = 'local'
     
     return render_template('blog.html', 
                          posts=standalone_posts, 
                          series_data=series_data,
-                         data=PORTFOLIO_DATA)
+                         data=PORTFOLIO_DATA,
+                         pipeline_enabled=BLOG_PIPELINE_CONFIG['enabled'])
 
 @app.route('/blog/<slug>')
 def blog_post(slug):
-    """Display individual blog post with series navigation"""
-    posts = load_blog_posts()
-    post = next((p for p in posts if p['slug'] == slug), None)
+    """Display individual blog post with series navigation (ENHANCED)"""
+    all_posts = get_all_blog_posts()
+    post = next((p for p in all_posts if p['slug'] == slug), None)
     
-    if not post or not post['published']:
+    if not post or not post.get('published', True):
         abort(404)
+
+    if post.get('source') == 'pipeline':
+        return redirect(f"/blog/pipeline/{slug}")
     
     series_nav = get_series_navigation(post)
     
@@ -367,6 +508,20 @@ def blog_post(slug):
                          post=post, 
                          series_nav=series_nav,
                          data=PORTFOLIO_DATA)
+
+@app.route('/blog/pipeline/<path:post_path>')
+def blog_pipeline_post(post_path):
+    """Serve static blog posts from pipeline"""
+    if not BLOG_PIPELINE_CONFIG['enabled']:
+        abort(404)
+    
+    try:
+        return send_from_directory(BLOG_PIPELINE_CONFIG['static_blog_dir'], post_path)
+    except FileNotFoundError:
+        try:
+            return send_from_directory(BLOG_PIPELINE_CONFIG['static_blog_dir'], f"{post_path}.html")
+        except FileNotFoundError:
+            abort(404)
 
 @app.route('/blog/series/<series_key>')
 def blog_series(series_key):
@@ -392,20 +547,79 @@ def blog_series_index():
 
 @app.route('/blog/feed.xml')
 def blog_feed():
-    """RSS feed for blog posts"""
-    posts = load_blog_posts()
-    published_posts = [post for post in posts if post['published']]
-    published_posts.sort(key=lambda x: x['date'], reverse=True)
+    """RSS feed for blog posts (ENHANCED with pipeline posts)"""
+    all_posts = get_all_blog_posts()
+    published_posts = [post for post in all_posts if post.get('published', True)]
     
     return render_template('blog_feed.xml', 
                          posts=published_posts[:10], 
                          data=PORTFOLIO_DATA), 200, {'Content-Type': 'application/xml'}
 
 
+@app.route('/api/blog/update', methods=['POST'])
+def update_blog_pipeline_content():
+    """Webhook endpoint to receive blog updates from pipeline"""
+    
+    if not BLOG_PIPELINE_CONFIG['enabled']:
+        return jsonify({'error': 'Blog pipeline not enabled'}), 404
+    
+    provided_secret = request.headers.get('X-Blog-Secret')
+    if provided_secret != BLOG_PIPELINE_CONFIG['secret_key']:
+        app.logger.warning(f"Invalid blog deploy secret from {request.remote_addr}")
+        return jsonify({'error': 'Invalid secret'}), 401
+    
+    if 'blog_content' not in request.files:
+        return jsonify({'error': 'No blog content provided'}), 400
+    
+    file = request.files['blog_content']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    try:
+        deployment_info = extract_blog_pipeline_content(file)
+        
+        load_blog_pipeline_data()
+        
+        app.logger.info(f"📦 Blog pipeline content updated successfully")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Blog pipeline content updated successfully',
+            'deployment_info': deployment_info,
+            'pipeline_posts_count': len(blog_pipeline_cache['posts']),
+            'total_posts_count': len([p for p in get_all_blog_posts() if p.get('published', True)]),
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        app.logger.error(f"❌ Error updating blog pipeline content: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+def extract_blog_pipeline_content(uploaded_file):
+    """Extract blog content from uploaded zip file"""
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
+        uploaded_file.save(tmp_file.name)
+        
+        with zipfile.ZipFile(tmp_file.name, 'r') as zip_ref:
+            zip_ref.extractall(BLOG_PIPELINE_CONFIG['content_dir'])
+        
+        os.unlink(tmp_file.name)
+    
+    manifest_path = os.path.join(BLOG_PIPELINE_CONFIG['content_dir'], 'deployment_manifest.json')
+    deployment_info = {}
+    
+    if os.path.exists(manifest_path):
+        with open(manifest_path, 'r') as f:
+            deployment_info = json.load(f)
+    
+    app.logger.info(f"📦 Extracted blog pipeline content to {BLOG_PIPELINE_CONFIG['content_dir']}")
+    return deployment_info
 
 if __name__ == '__main__':
     print("Starting Flask development server...")
     print("Note: This should only be used for local development!")
     print("Production deployments should use Gunicorn behind Nginx")
+    print(f"Blog pipeline enabled: {BLOG_PIPELINE_CONFIG['enabled']}")
 
     app.run(host='0.0.0.0', port=5000, debug=True)
