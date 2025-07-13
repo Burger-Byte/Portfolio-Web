@@ -5,7 +5,7 @@
 {% block content %}
 <div style="margin-top: 100px;"></div>
 
-<!-- Header -->
+
 <section class="py-5 bg-dark-custom">
     <div class="container">
         <div class="text-center">
@@ -17,7 +17,24 @@
 
 <div style="margin-top: 100px;"></div>
 
-<!-- Blog Series Section -->
+{% if pipeline_enabled and data.blog_pipeline.featured_posts %}
+<div class="alert alert-info mb-4">
+    <h6><i class="bi bi-star"></i> Featured from Pipeline</h6>
+    <div class="row">
+        {% for post in data.blog_pipeline.featured_posts[:2] %}
+        <div class="col-md-6">
+            <a href="{{ post.url }}" class="text-decoration-none">
+                <strong>{{ post.title }}</strong>
+            </a>
+            <br><small class="text-muted">{{ post.excerpt[:100] }}...</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+
+
 {% if series_data %}
 <section class="py-5">
     <div class="container">
@@ -68,7 +85,7 @@
 </section>
 {% endif %}
 
-<!-- Individual Blog Posts -->
+
 <section class="py-5">
     <div class="container">
         {% if posts or series_data %}
