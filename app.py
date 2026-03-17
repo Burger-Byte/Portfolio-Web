@@ -60,7 +60,7 @@ PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
         'title': 'Software Engineer',
-        'tagline': '🚀 Crafting code like a chef cooks burgers - with passion and a dash of creativity! Growing developer by day, debugging ninja by night.',
+        'tagline': 'Crafting code like a chef cooks burgers - with passion and a dash of creativity! Growing developer by day, debugging ninja by night.',
         'location': 'Durban, South Africa',
         'linkedin': 'https://www.linkedin.com/in/jaques-b-0519358a/',
         'github': 'https://github.com/Burger-Byte',
