@@ -11,7 +11,7 @@ all deployable with production-ready best practices.
 </p>
 
 
-## 🚀 Features
+## Features
 
 - **Flask-based web app** with modular templates and Bootstrap 5 styling
 - **Responsive UI** with custom themes and interactive knowledge map
@@ -23,27 +23,27 @@ all deployable with production-ready best practices.
 
 
 
-## 📊 Deployment Pipeline
+## Deployment Pipeline
 ```mermaid
 flowchart LR
-    A[👨‍💻 Developer] --> B[📝 Git Push to main]
-    B --> C[🔄 GitHub Actions]
-    C --> D[🐳 Docker Build]
-    D --> E[📦 Push to Docker Hub]
-    E --> F[🚀 Deploy to Server]
-    F --> G[✅ Health Check]
+    A[Developer] --> B[Git Push to main]
+    B --> C[GitHub Actions]
+    C --> D[Docker Build]
+    D --> E[Push to Docker Hub]
+    E --> F[Deploy to Server]
+    F --> G[Health Check]
     
-    subgraph "🏗️ Build Process"
+    subgraph "Build Process"
         D --> D1[Copy Files]
         D1 --> D2[Install Dependencies]
         D2 --> D3[Configure Gunicorn]
     end
     
-    subgraph "🖥️ Server Infrastructure"
-        F --> F1[🐋 Docker Compose Up]
-        F1 --> F2[🌐 NGINX Proxy]
-        F2 --> F3[🔒 SSL/HTTPS]
-        F3 --> F4[🌍 Domain Access]
+    subgraph "Server Infrastructure"
+        F --> F1[Docker Compose Up]
+        F1 --> F2[NGINX Proxy]
+        F2 --> F3[SSL/HTTPS]
+        F3 --> F4[Domain Access]
     end
     
     style A fill:#e1f5fe
@@ -51,30 +51,30 @@ flowchart LR
     style F4 fill:#fff3e0
 ```
 
-## 🏗️ Runtime Architecture
+## Runtime Architecture
 ```mermaid
 flowchart TD
-    subgraph "🌐 Internet"
-        U[👤 User Request]
-        D[🌍 yourdomain.com]
+    subgraph "Internet"
+        U[User Request]
+        D[yourdomain.com]
     end
     
-    subgraph "🏠 Home Network"
-        R[🌐 Router<br/>Port Forward<br/>80/443]
+    subgraph "Home Network"
+        R[Router<br/>Port Forward<br/>80/443]
     end
     
-    subgraph "🖥️ Your Server"
-        N[⚡ NGINX<br/>Reverse Proxy<br/>SSL Termination]
+    subgraph "Your Server"
+        N[NGINX<br/>Reverse Proxy<br/>SSL Termination]
         
-        subgraph "🐳 Docker Container"
-            G[🦄 Gunicorn<br/>WSGI Server]
-            F[🐍 Flask App<br/>app.py]
+        subgraph "Docker Container"
+            G[Gunicorn<br/>WSGI Server]
+            F[Flask App<br/>app.py]
         end
         
-        subgraph "📁 App Structure"
-            T[📄 Templates<br/>Jinja2 HTML]
-            S[🎨 Static Files<br/>CSS, Images, JS]
-            C[⚙️ Config<br/>gunicorn_config.py]
+        subgraph "App Structure"
+            T[Templates<br/>Jinja2 HTML]
+            S[Static Files<br/>CSS, Images, JS]
+            C[Config<br/>gunicorn_config.py]
         end
     end
     
@@ -87,12 +87,12 @@ flowchart TD
     F --> S
     F --> C
     
-    subgraph "🛣️ Flask Routes"
-        F --> H1[🏠 Home /]
-        F --> H2[👤 About /about]
-        F --> H3[📞 Contact /contact]
-        F --> H4[📄 Resume /resume]
-        F --> H5[❤️ Health /health]
+    subgraph "Flask Routes"
+        F --> H1[Home /]
+        F --> H2[About /about]
+        F --> H3[Contact /contact]
+        F --> H4[Resume /resume]
+        F --> H5[Health /health]
     end
     
     style U fill:#e3f2fd
@@ -102,7 +102,7 @@ flowchart TD
     style G fill:#e0f2f1
 ```
 
-## 🛠️ Local Development Setup
+## Local Development Setup
 
 1. **Clone the repository:**
    ```sh
@@ -125,7 +125,7 @@ flowchart TD
 
 ---
 
-## 🐳 Docker Setup
+## Docker Setup
 
 1. **Build the Docker image:**
    ```sh
@@ -141,7 +141,7 @@ flowchart TD
 
 ---
 
-## 🔒 SSL & Production Deployment
+## SSL & Production Deployment
 
 - **SSL Certificates:**  
   Place your SSL certificates in `/etc/letsencrypt/live/yourcoolendpointhere/` (or update `SSL_CERT_PATH` and `SSL_KEY_PATH` in your environment).
@@ -152,7 +152,7 @@ flowchart TD
 
 ---
 
-## ⚙️ CI/CD with GitHub Actions
+## CI/CD with GitHub Actions
 
 - On every push to `main`, [deploy.yaml](.github/workflows/deploy.yaml) will:
   1. Build and push the Docker image to Docker Hub.
@@ -161,7 +161,7 @@ flowchart TD
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Key environment variables (see `docker-compose.yaml`):
 
@@ -172,7 +172,7 @@ Key environment variables (see `docker-compose.yaml`):
 
 ---
 
-## 📄 Customization
+## Customization
 
 - **Profile & About Info:**  
   Update the `PORTFOLIO_DATA` dictionary in [`app.py`](app.py) for your name, title, links, and summary.
@@ -183,13 +183,13 @@ Key environment variables (see `docker-compose.yaml`):
 
 ---
 
-## 📝 License
+## License
 
 This project is for personal portfolio use. Feel free to fork and adapt for your own portfolio!
 
 ---
 
-## 🙋‍♂️ Contact
+## Contact
 
 Questions or feedback?   
 LinkedIn: [Jaques Burger](https://www.linkedin.com/in/jaques-b-0519358a/)

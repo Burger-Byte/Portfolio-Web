@@ -77,7 +77,7 @@ I'm planning to publish new posts regularly, covering topics like:
 
 Thanks for visiting! I hope you'll find the content useful. Feel free to reach out through my [contact page](/contact) if you have any questions or topics you'd like me to cover.
 
-Happy coding! 🚀
+Happy coding!
 
 ---
 

@@ -77,9 +77,9 @@ jobs:
 
         # Show initial logs
         sleep 5
-        echo "🔍 Container status:"
+        echo "Container status:"
         docker ps
-        echo "📋 Initial logs:"
+        echo "Initial logs:"
         docker-compose logs --tail=20
 
         # Clean up old images
@@ -88,7 +88,7 @@ jobs:
     - name: Health check
       run: |
         cd /opt/portfolio
-        echo "⏳ Waiting for services to start..."
+        echo "Waiting for services to start..."
         sleep 30
 
         check_health() {
@@ -96,30 +96,30 @@ jobs:
           local name=$2
           echo "Checking $name..."
           if curl -f -k -m 10 "$url" > /dev/null 2>&1; then
-            echo "✅ $name is responding!"
+            echo "$name is responding!"
             return 0
           else
-            echo "❌ $name is not responding"
+            echo "$name is not responding"
             return 1
           fi
         }
 
         if check_health "https://jaquesburger.com/" "HTTPS endpoint"; then
-          echo "✅ Deployment successful!"
-          echo "🔒 SSL is working correctly"
+          echo "Deployment successful!"
+          echo "SSL is working correctly"
         elif check_health "http://jaquesburger.com/" "HTTP endpoint"; then
-          echo "⚠️ HTTP is working but HTTPS redirect may have issues"
+          echo "HTTP is working but HTTPS redirect may have issues"
           docker-compose logs nginx --tail=50
         else
-          echo "❌ Both HTTP and HTTPS checks failed!"
-          echo "📋 Container status:"
+          echo "Both HTTP and HTTPS checks failed!"
+          echo "Container status:"
           docker ps -a
-          echo "📋 Nginx logs:"
+          echo "Nginx logs:"
           docker-compose logs nginx --tail=50
-          echo "📋 App logs:"
+          echo "App logs:"
           docker-compose logs portfolio-app --tail=50
 
-          echo "🔍 Testing internal connectivity:"
+          echo "Testing internal connectivity:"
           docker exec nginx_proxy sh -c "apk add --no-cache curl && curl -I http://portfolio-app:5000/" || echo "Internal connection failed"
 
           exit 1

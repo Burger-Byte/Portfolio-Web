@@ -60,7 +60,7 @@ PORTFOLIO_DATA = {
     'personal_info': {
         'name': 'Jaques Burger',
         'title': 'Software Engineer',
-        'tagline': '🚀 Crafting code like a chef cooks burgers - with passion and a dash of creativity! Growing developer by day, debugging ninja by night.',
+        'tagline': 'Crafting code like a chef cooks burgers - with passion and a dash of creativity! Growing developer by day, debugging ninja by night.',
         'location': 'Durban, South Africa',
         'linkedin': 'https://www.linkedin.com/in/jaques-b-0519358a/',
         'github': 'https://github.com/Burger-Byte',
@@ -189,7 +189,7 @@ def load_blog_pipeline_data():
                 'loaded': True
             })
             
-            app.logger.info(f"📚 Loaded {len(blog_pipeline_cache['posts'])} pipeline blog posts")
+            app.logger.info(f"Loaded {len(blog_pipeline_cache['posts'])} pipeline blog posts")
         
         if os.path.exists(BLOG_PIPELINE_CONFIG['portfolio_data_file']):
             with open(BLOG_PIPELINE_CONFIG['portfolio_data_file'], 'r') as f:
@@ -202,10 +202,10 @@ def load_blog_pipeline_data():
                 'stats': blog_pipeline_cache['stats']
             })
             
-            app.logger.info(f"🎯 Updated portfolio with {len(PORTFOLIO_DATA['blog_pipeline']['featured_posts'])} pipeline featured posts")
-    
+            app.logger.info(f"Updated portfolio with {len(PORTFOLIO_DATA['blog_pipeline']['featured_posts'])} pipeline featured posts")
+
     except Exception as e:
-        app.logger.error(f"⚠️  Error loading pipeline blog data: {e}")
+        app.logger.error(f"Error loading pipeline blog data: {e}")
         blog_pipeline_cache.update({
             'posts': [],
             'featured_posts': [],
@@ -580,7 +580,7 @@ def update_blog_pipeline_content():
         
         load_blog_pipeline_data()
         
-        app.logger.info(f"📦 Blog pipeline content updated successfully")
+        app.logger.info(f"Blog pipeline content updated successfully")
         
         return jsonify({
             'status': 'success',
@@ -592,7 +592,7 @@ def update_blog_pipeline_content():
         })
     
     except Exception as e:
-        app.logger.error(f"❌ Error updating blog pipeline content: {str(e)}")
+        app.logger.error(f"Error updating blog pipeline content: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def extract_blog_pipeline_content(uploaded_file):
@@ -613,7 +613,7 @@ def extract_blog_pipeline_content(uploaded_file):
         with open(manifest_path, 'r') as f:
             deployment_info = json.load(f)
     
-    app.logger.info(f"📦 Extracted blog pipeline content to {BLOG_PIPELINE_CONFIG['content_dir']}")
+    app.logger.info(f"Extracted blog pipeline content to {BLOG_PIPELINE_CONFIG['content_dir']}")
     return deployment_info
 
 if __name__ == '__main__':
