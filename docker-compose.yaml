@@ -23,6 +23,12 @@ services:
     container_name: portfolio_web
     expose:
       - "5000"  # Internal only, not published
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
     restart: unless-stopped
     volumes:
       - /secure/portfolio/resume:/app/static/secure:ro
